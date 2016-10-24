@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using DocumentFormat.OpenXml.Spreadsheet;
+using DocumentFormat.OpenXml.Validation;
 
 namespace ExcelInteraction
 {
@@ -19,6 +20,9 @@ namespace ExcelInteraction
         private static void CreateSpreadSheetWorkBook(string fileName)
         {
             SpreadsheetDocument document = SpreadsheetDocument.Create(fileName, SpreadsheetDocumentType.Workbook);
+
+            //MainDocumentPart mainPart = document.AddNewPart<Ma>()
+            SetPackageProperties(document);
 
             WorkbookPart workbook = document.AddWorkbookPart();
             workbook.Workbook = new Workbook();
@@ -39,35 +43,17 @@ namespace ExcelInteraction
             workbook.Workbook.Save();
             document.Close();
         }
-
-        //public void CreatePackage(string filePath)
-        //{
-        //    using (SpreadsheetDocument package = SpreadsheetDocument.Create(filePath, SpreadsheetDocumentType.Workbook))
-        //    {
-        //        CreateParts(package);
-        //    }
-        //}
-
-
-        //public void Save(SpreadsheetDocument document)
-        //{
-        //    throw new NotImplementedException();
-        //}
-
-
+        
         public static void InsertText(string fileName, string text)
         {
             using (SpreadsheetDocument spreadsheet = SpreadsheetDocument.Open(fileName, true))
             {
-                SharedStringTablePart sharedStringPart;
-                if (spreadsheet.WorkbookPart.GetPartsOfType<SharedStringTablePart>().Count() > 0)
-                    sharedStringPart = spreadsheet.WorkbookPart.GetPartsOfType<SharedStringTablePart>().First();
-                else
-                    sharedStringPart = spreadsheet.WorkbookPart.AddNewPart<SharedStringTablePart>();
+                var sharedStringPart = spreadsheet.WorkbookPart.GetPartsOfType<SharedStringTablePart>().Any() ? spreadsheet.WorkbookPart.GetPartsOfType<SharedStringTablePart>().First() : spreadsheet.WorkbookPart.AddNewPart<SharedStringTablePart>();
 
                 int index = InsertSharedStringItem(text, sharedStringPart);
 
-                WorksheetPart worksheetPart = InsertWorkSheet(spreadsheet.WorkbookPart);
+                //WorksheetPart worksheetPart = InsertWorkSheet(spreadsheet.WorkbookPart);
+                WorksheetPart worksheetPart = spreadsheet.WorkbookPart.GetPartsOfType<WorksheetPart>().First();
 
                 Cell cell = InsertCellInWorkSheet("A", 1, worksheetPart);
 
@@ -75,6 +61,16 @@ namespace ExcelInteraction
                 cell.DataType = new EnumValue<CellValues>(CellValues.SharedString);
 
                 worksheetPart.Worksheet.Save();
+                ValidateDocument(fileName);
+            }
+        }
+
+        private static void ValidateDocument(string fileName)
+        {
+            OpenXmlValidator validator = new OpenXmlValidator();
+            using (SpreadsheetDocument spreadsheet = SpreadsheetDocument.Open(fileName, true))
+            {
+                validator.Validate(spreadsheet);
             }
         }
 
@@ -85,27 +81,19 @@ namespace ExcelInteraction
             string cellReference = columnName + rowIndex;
 
             Row row;
-            if (sheetData.Elements<Row>().Where(r => r.RowIndex == rowIndex).Count() != 0)
-                row = sheetData.Elements<Row>().Where(r => r.RowIndex == rowIndex).First();
+            if (sheetData.Elements<Row>().Count(r => r.RowIndex == rowIndex) != 0)
+                row = sheetData.Elements<Row>().First(r => r.RowIndex == rowIndex);
             else
             {
                 row = new Row() {RowIndex = rowIndex};
                 sheetData.Append(row);
             }
 
-            if (row.Elements<Cell>().Where(c => c.CellReference.Value == columnName + rowIndex).Count() > 0)
-                return row.Elements<Cell>().Where(c => c.CellReference.Value == cellReference).First();
+            if (row.Elements<Cell>().Any(c => c.CellReference.Value == columnName + rowIndex))
+                return row.Elements<Cell>().First(c => c.CellReference.Value == cellReference);
             else
             {
-                Cell refCell = null;
-                foreach (Cell cell in row.Elements<Cell>())
-                {
-                    if (string.Compare(cell.CellReference.Value, cellReference, true)>0)
-                    {
-                        refCell = cell;
-                        break;
-                    }
-                }
+                Cell refCell = row.Elements<Cell>().FirstOrDefault(cell => string.Compare(cell.CellReference.Value, cellReference, true) > 0);
 
                 Cell newCell = new Cell() {CellReference = cellReference};
                 row.InsertBefore(newCell, refCell);
@@ -125,10 +113,10 @@ namespace ExcelInteraction
             string relationshipId = workbookPart.GetIdOfPart(newWorksheetPart);
 
             uint sheetId = 1;
-            if (sheets.Elements<Sheet>().Count() > 0)
+            if (sheets.Elements<Sheet>().Any())
                 sheetId = sheets.Elements<Sheet>().Select(s => s.SheetId.Value).Max() + 1;
 
-            string sheetName = $"Sheet {sheetId}";
+            string sheetName = $"sheet{sheetId}";
             Sheet sheet = new Sheet()
             {
                 Id = relationshipId,
@@ -160,6 +148,12 @@ namespace ExcelInteraction
             sharedStringPart.SharedStringTable.Save();
 
             return i;
+        }
+
+        private static void SetPackageProperties(OpenXmlPackage document)
+        {
+            document.PackageProperties.Modified = System.Xml.XmlConvert.ToDateTime("2016-10-24T20:16:51Z", System.Xml.XmlDateTimeSerializationMode.RoundtripKind);
+            document.PackageProperties.LastModifiedBy = "BitLLC";
         }
     }
 }
