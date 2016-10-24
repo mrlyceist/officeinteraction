@@ -36,6 +36,9 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml" />
   </ItemGroup>
   <Choose>
     <When Condition="('$(VisualStudioVersion)' == '10.0' or '$(VisualStudioVersion)' == '') and '$(TargetFrameworkVersion)' == 'v3.5'">
@@ -57,6 +60,10 @@
     <ProjectReference Include="..\ExcelInteraction\ExcelInteraction.csproj">
       <Project>{0e3660c6-05ae-4c9c-a724-aa48ac61dede}</Project>
       <Name>ExcelInteraction</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\NCore\NCore.csproj">
+      <Project>{baf4b3b7-fdb9-4989-8fc7-e3bfac9a725a}</Project>
+      <Name>NCore</Name>
     </ProjectReference>
   </ItemGroup>
   <Choose>
