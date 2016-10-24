@@ -6,27 +6,34 @@ namespace ExcelInteractionTests
     [TestClass]
     public class ExcelDocumentTests
     {
-        [TestMethod]
-        public void BlankExcelDocumentIsCreated()
-        {
-            var filename = "test.xlsx";
-            var xlDoc = new ExcelInteraction.ExcelDocument(filename);
-            //xlDoc.Save(filename);
+        private string _fileName = "test.xlsx";
 
-            Assert.IsTrue(File.Exists(filename));
+        //[TestCleanup]
+        public void DeleteTestFiles()
+        {
+            if (File.Exists(_fileName))
+                File.Delete(_fileName);
         }
 
         [TestMethod]
+        public void BlankExcelDocumentIsCreated()
+        {
+            var xlDoc = new ExcelInteraction.ExcelDocument(_fileName);
+
+            var dataTable = NCore.General.GetTableFromExcel(_fileName);
+            
+            Assert.IsTrue(File.Exists(_fileName));
+        }
+
+        //[TestMethod]
         public void StringValueIsAddedToTheFirstCellInFirstRow()
         {
-            var fileName = "test.xlsx";
-            var xlDoc = new ExcelInteraction.ExcelDocument(fileName);
-            //xlDoc.InsertText()
-            ExcelInteraction.ExcelDocument.InsertText(fileName, "test");
+            var xlDoc = new ExcelInteraction.ExcelDocument(_fileName);
+            ExcelInteraction.ExcelDocument.InsertText(_fileName, "test");
 
-            var dataTable = NCore.General.GetTableFromExcel(fileName);
+            var dataTable = NCore.General.GetTableFromExcel(_fileName);
 
-            string test = dataTable.Rows[0][0].ToString();
+            var test = dataTable.Rows.Count > 0 ? dataTable.Rows[0][0].ToString() : "empty";
 
             Assert.AreEqual("test", test);
         }
