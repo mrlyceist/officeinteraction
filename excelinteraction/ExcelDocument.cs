@@ -17,11 +17,15 @@ namespace ExcelInteraction
             CreateSpreadSheetWorkBook(fileName);
         }
 
-        private static void CreateSpreadSheetWorkBook(string fileName)
+
+        /// <summary>
+        /// Создает книгу Excel
+        /// </summary>
+        /// <param name="fileName"></param>
+        public static void CreateSpreadSheetWorkBook(string fileName)
         {
             SpreadsheetDocument document = SpreadsheetDocument.Create(fileName, SpreadsheetDocumentType.Workbook);
-
-            //MainDocumentPart mainPart = document.AddNewPart<Ma>()
+            
             SetPackageProperties(document);
 
             WorkbookPart workbook = document.AddWorkbookPart();
@@ -44,33 +48,44 @@ namespace ExcelInteraction
             document.Close();
         }
         
-        public static void InsertText(string fileName, string text)
+        public static void InsertText(string fileName, string text, string sheetName, string columnName, uint rowIndex)
         {
             using (SpreadsheetDocument spreadsheet = SpreadsheetDocument.Open(fileName, true))
             {
-                var sharedStringPart = spreadsheet.WorkbookPart.GetPartsOfType<SharedStringTablePart>().Any() ? spreadsheet.WorkbookPart.GetPartsOfType<SharedStringTablePart>().First() : spreadsheet.WorkbookPart.AddNewPart<SharedStringTablePart>();
+                SharedStringTablePart sharedStringPart;
+                if (spreadsheet.WorkbookPart.GetPartsOfType<SharedStringTablePart>().Any())
+                    sharedStringPart = spreadsheet.WorkbookPart.GetPartsOfType<SharedStringTablePart>().First();
+                else sharedStringPart = spreadsheet.WorkbookPart.AddNewPart<SharedStringTablePart>();
 
                 int index = InsertSharedStringItem(text, sharedStringPart);
 
                 //WorksheetPart worksheetPart = InsertWorkSheet(spreadsheet.WorkbookPart);
-                WorksheetPart worksheetPart = spreadsheet.WorkbookPart.GetPartsOfType<WorksheetPart>().First();
+                //WorksheetPart worksheetPart = spreadsheet.WorkbookPart.GetPartsOfType<WorksheetPart>().First();
+                WorksheetPart worksheetPart = null;
+                int sheetIndex = 0;
+                foreach (WorksheetPart part in spreadsheet.WorkbookPart.WorksheetParts)
+                {
+                    Worksheet worksheet = part.Worksheet;
+                    string name = spreadsheet.WorkbookPart.Workbook.Descendants<Sheet>().ElementAt(sheetIndex).Name;
+                    if (name == sheetName)
+                    {
+                        worksheetPart = spreadsheet.WorkbookPart.GetPartsOfType<WorksheetPart>().ElementAt(sheetIndex);
+                        break;
+                    }
+                    sheetIndex++;
+                }
 
-                Cell cell = InsertCellInWorkSheet("A", 1, worksheetPart);
+                if (worksheetPart == null)
+                {
+                    worksheetPart = InsertWorkSheet(spreadsheet.WorkbookPart, sheetName);
+                }
+
+                Cell cell = InsertCellInWorkSheet(columnName, rowIndex, worksheetPart);
 
                 cell.CellValue = new CellValue(index.ToString());
                 cell.DataType = new EnumValue<CellValues>(CellValues.SharedString);
 
                 worksheetPart.Worksheet.Save();
-                ValidateDocument(fileName);
-            }
-        }
-
-        private static void ValidateDocument(string fileName)
-        {
-            OpenXmlValidator validator = new OpenXmlValidator();
-            using (SpreadsheetDocument spreadsheet = SpreadsheetDocument.Open(fileName, true))
-            {
-                validator.Validate(spreadsheet);
             }
         }
 
@@ -103,7 +118,7 @@ namespace ExcelInteraction
             }
         }
 
-        private static WorksheetPart InsertWorkSheet(WorkbookPart workbookPart)
+        private static WorksheetPart InsertWorkSheet(WorkbookPart workbookPart, string sheetName)
         {
             WorksheetPart newWorksheetPart = workbookPart.AddNewPart<WorksheetPart>();
             newWorksheetPart.Worksheet = new Worksheet(new SheetData());
@@ -115,8 +130,7 @@ namespace ExcelInteraction
             uint sheetId = 1;
             if (sheets.Elements<Sheet>().Any())
                 sheetId = sheets.Elements<Sheet>().Select(s => s.SheetId.Value).Max() + 1;
-
-            string sheetName = $"sheet{sheetId}";
+            
             Sheet sheet = new Sheet()
             {
                 Id = relationshipId,
@@ -130,6 +144,12 @@ namespace ExcelInteraction
             return newWorksheetPart;
         }
 
+        /// <summary>
+        /// Вставляет текст?
+        /// </summary>
+        /// <param name="text"></param>
+        /// <param name="sharedStringPart"></param>
+        /// <returns></returns>
         private static int InsertSharedStringItem(string text, SharedStringTablePart sharedStringPart)
         {
             if (sharedStringPart.SharedStringTable == null)
@@ -150,6 +170,10 @@ namespace ExcelInteraction
             return i;
         }
 
+        /// <summary>
+        /// Задает основные свойства докуменат Excel
+        /// </summary>
+        /// <param name="document"></param>
         private static void SetPackageProperties(OpenXmlPackage document)
         {
             document.PackageProperties.Modified = System.Xml.XmlConvert.ToDateTime("2016-10-24T20:16:51Z", System.Xml.XmlDateTimeSerializationMode.RoundtripKind);
