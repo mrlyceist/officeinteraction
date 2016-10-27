@@ -2,6 +2,7 @@
 using System.IO;
 using Excel = Microsoft.Office.Interop.Excel;
 using System;
+using ExcelInteraction;
 
 namespace ExcelInteractionTests
 {
@@ -10,7 +11,7 @@ namespace ExcelInteractionTests
     {
         private string _fileName = "test.xlsx";
 
-        //[TestCleanup]
+        [TestCleanup]
         public void DeleteTestFiles()
         {
             if (File.Exists(_fileName))
@@ -20,7 +21,7 @@ namespace ExcelInteractionTests
         [TestMethod]
         public void BlankExcelDocumentIsCreated()
         {
-            var xlDoc = new ExcelInteraction.ExcelDocument(_fileName);
+            var xlDoc = new ExcelDocument(_fileName);
 
             //var dataTable = NCore.General.GetTableFromExcel(_fileName);
             
@@ -30,15 +31,11 @@ namespace ExcelInteractionTests
         [TestMethod]
         public void StringValueIsAddedToTheFirstCellInFirstRow()
         {
-            var xlDoc = new ExcelInteraction.ExcelDocument(_fileName);
-            ExcelInteraction.ExcelDocument.InsertText(_fileName, "test");
+            var xlDoc = new ExcelDocument(_fileName);
+            ExcelDocument.InsertText(_fileName, "test", "report", "A", 1);
 
-            //var dataTable = NCore.General.GetTableFromExcel(_fileName);
-
-            //var test = dataTable.Rows.Count > 0 ? dataTable.Rows[0][0].ToString() : "empty";
             Excel.Application application = new Excel.ApplicationClass();
-            //Excel.Workbook workBook = application.Workbooks.Open(_fileName, 0, false, 5,"","",false, )
-            Excel.Workbook workbook = application.Workbooks.Open(_fileName);
+            Excel.Workbook workbook = application.Workbooks.Open(Path.Combine(Directory.GetCurrentDirectory(), _fileName));
             Excel.Sheets sheets = workbook.Worksheets;
             Excel.Worksheet sheet = (Excel.Worksheet)workbook.Worksheets.Item[1];
             var cell = (Excel.Range)sheet.Cells[1, 1];
@@ -50,6 +47,40 @@ namespace ExcelInteractionTests
             Assert.AreEqual("test", test);
         }
 
+        [TestMethod]
+        public void CanCreateWithStaticMethods()
+        {
+            ExcelDocument.CreateSpreadSheetWorkBook(_fileName);
+
+            Assert.IsTrue(File.Exists(_fileName));
+        }
+
+        [TestMethod]
+        public void CanWriteWithStaticMethods()
+        {
+            ExcelDocument.CreateSpreadSheetWorkBook(_fileName);
+            ExcelDocument.InsertText(_fileName, "test", "report", "A", 1);
+
+            Excel.Application application = new Excel.ApplicationClass();
+            Excel.Workbook workbook = application.Workbooks.Open(Path.Combine(Directory.GetCurrentDirectory(), _fileName));
+            Excel.Sheets sheets = workbook.Worksheets;
+            Excel.Worksheet sheet = (Excel.Worksheet)workbook.Worksheets.Item[1];
+            var cell = (Excel.Range)sheet.Cells[1, 1];
+
+            string test = (string)cell.Value;
+
+            ExcelClose(workbook, application);
+
+            Assert.AreEqual("test", test);
+        }
+
+        [TestMethod]
+        public void CanSetCellBorder()
+        {
+
+        }
+
+        #region Private Methods
         private void ExcelClose(Excel.Workbook workbook, Excel.Application application)
         {
             var missingObj = System.Reflection.Missing.Value;
@@ -59,6 +90,7 @@ namespace ExcelInteractionTests
             System.Runtime.InteropServices.Marshal.ReleaseComObject(application);
 
             GC.Collect();
-        }
+        } 
+        #endregion
     }
 }
