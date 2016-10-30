@@ -186,17 +186,17 @@ namespace ExcelInteraction
         public static void SetBorder(string fileName, string sheetName, string columnName, uint rowIndex)
         {
             //GenerateBorder(BorderStyleValues.Thick);
-            using (SpreadsheetDocument spreadsheet = SpreadsheetDocument.Open(fileName, true))
+            using (SpreadsheetDocument document = SpreadsheetDocument.Open(fileName, true))
             {
                 WorksheetPart worksheetPart = null;
                 int sheetIndex = 0;
-                foreach (WorksheetPart part in spreadsheet.WorkbookPart.WorksheetParts)
+                foreach (WorksheetPart part in document.WorkbookPart.WorksheetParts)
                 {
                     Worksheet worksheet = part.Worksheet;
-                    string name = spreadsheet.WorkbookPart.Workbook.Descendants<Sheet>().ElementAt(sheetIndex).Name;
+                    string name = document.WorkbookPart.Workbook.Descendants<Sheet>().ElementAt(sheetIndex).Name;
                     if (name == sheetName)
                     {
-                        worksheetPart = spreadsheet.WorkbookPart.GetPartsOfType<WorksheetPart>().ElementAt(sheetIndex);
+                        worksheetPart = document.WorkbookPart.GetPartsOfType<WorksheetPart>().ElementAt(sheetIndex);
                         break;
                     }
                     sheetIndex++;
@@ -204,15 +204,15 @@ namespace ExcelInteraction
 
                 if (worksheetPart == null)
                 {
-                    worksheetPart = InsertWorkSheet(spreadsheet.WorkbookPart, sheetName);
+                    worksheetPart = InsertWorkSheet(document.WorkbookPart, sheetName);
                 }
 
                 Cell cell = GetCell(worksheetPart, columnName, rowIndex);
 
                 CellFormat cellFormat = cell.StyleIndex != null
-                    ? GetCellFormat(spreadsheet.WorkbookPart, cell.StyleIndex).CloneNode(true) as CellFormat
+                    ? GetCellFormat(document.WorkbookPart, cell.StyleIndex).CloneNode(true) as CellFormat
                     : new CellFormat();
-                cellFormat.BorderId = InsertBorder(spreadsheet.WorkbookPart, GenerateBorder(BorderStyleValues.Thick));
+                cellFormat.BorderId = InsertBorder(document.WorkbookPart, GenerateBorder(BorderStyleValues.Thick));
 
                 worksheetPart.Worksheet.Save();
             }
