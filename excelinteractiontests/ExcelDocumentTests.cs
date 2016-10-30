@@ -63,11 +63,7 @@ namespace ExcelInteractionTests
             xlDoc.InsertText(testText, "testSheet", "A", 1);
             xlDoc.Save();
 
-            _application = new Excel.ApplicationClass();
-            _workbook = _application.Workbooks.Open(_testFile);
-            Excel.Sheets sheets = _workbook.Worksheets;
-            Excel.Worksheet sheet = (Excel.Worksheet) sheets.Item[1];
-            var cell = (Excel.Range) sheet.Cells[1, 1];
+            Excel.Range cell = GetTestCell();
             string testValue = (string) cell.Value;
 
             Assert.AreEqual(testText, testValue);
@@ -99,16 +95,27 @@ namespace ExcelInteractionTests
             xlDoc.SetBorder(sheetName, "A", 1, BorderStyleValues.Thick);
             xlDoc.Save();
 
-            _application = new Excel.ApplicationClass();
-            _workbook = _application.Workbooks.Open(_testFile);
-            Excel.Sheets sheets = _workbook.Worksheets;
-            Excel.Worksheet sheet = (Excel.Worksheet) sheets.Item[1];
-            var cell = (Excel.Range) sheet.Cells[1, 1];
-
+            Excel.Range cell = GetTestCell();
             bool bottomBorder = cell.Borders[Excel.XlBordersIndex.xlEdgeBottom].LineStyle.GetHashCode() !=
                                 Excel.XlLineStyle.xlLineStyleNone.GetHashCode();
 
             Assert.IsTrue(bottomBorder);
+        }
+
+        [TestMethod]
+        public void CanMakeCellBold()
+        {
+            string sheetName = "testSheet";
+            var xlDoc = new ExcelDocument(_testFile);
+            xlDoc.AddSpreadSheet(sheetName);
+            xlDoc.InsertText("testText", sheetName, "A", 1);
+            xlDoc.MakeBold(sheetName, "A", 1);
+            xlDoc.Save();
+
+            Excel.Range cell = GetTestCell();
+            bool isBold = (bool) cell.Font.Bold;
+
+            Assert.IsTrue(isBold);
         }
 
         #region Private Methods
@@ -121,7 +128,17 @@ namespace ExcelInteractionTests
             System.Runtime.InteropServices.Marshal.ReleaseComObject(application);
 
             GC.Collect();
-        } 
+        }
+
+        private Excel.Range GetTestCell()
+        {
+            _application = new Excel.ApplicationClass();
+            _workbook = _application.Workbooks.Open(_testFile);
+            Excel.Sheets sheets = _workbook.Worksheets;
+            Excel.Worksheet sheet = (Excel.Worksheet)sheets.Item[1];
+            var cell = (Excel.Range)sheet.Cells[1, 1];
+            return cell;
+        }
         #endregion
     }
 }
