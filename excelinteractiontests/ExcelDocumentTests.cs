@@ -11,14 +11,22 @@ namespace ExcelInteractionTests
     [TestClass]
     public class ExcelDocumentTests
     {
-        //private string _testFile = "test.xlsx";
         private readonly string _testFile = Path.Combine(Directory.GetCurrentDirectory(), "test.xlsx");
-        
+        private Excel.ApplicationClass _application;
+        private Excel.Workbook _workbook;
+
         [TestInitialize]
         public void DeleteTestFile()
         {
             if (File.Exists(_testFile))
                 File.Delete(_testFile);
+        }
+
+        [TestCleanup]
+        public void CleanupComObjects()
+        {
+            if (_application != null || _workbook != null)
+                ExcelClose(_workbook, _application);
         }
 
         [TestMethod]
@@ -38,12 +46,10 @@ namespace ExcelInteractionTests
             xldoc.AddSpreadSheet("test");
             xldoc.Save();
 
-            Excel.Application application = new Excel.ApplicationClass();
-            Excel.Workbook workbook = application.Workbooks.Open(_testFile);
+            _application = new Excel.ApplicationClass();
+            _workbook = _application.Workbooks.Open(_testFile);
             //Excel.Sheets sheets = workbook.Worksheets;
-            var sheetsCount = workbook.Worksheets.Count;
-
-            ExcelClose(workbook, application);
+            var sheetsCount = _workbook.Worksheets.Count;
 
             Assert.AreEqual(1, sheetsCount);
         }
@@ -57,13 +63,12 @@ namespace ExcelInteractionTests
             xlDoc.InsertText(testText, "testSheet", "A", 1);
             xlDoc.Save();
 
-            Excel.Application application = new Excel.ApplicationClass();
-            Excel.Workbook workbook = application.Workbooks.Open(_testFile);
-            Excel.Sheets sheets = workbook.Worksheets;
+            _application = new Excel.ApplicationClass();
+            _workbook = _application.Workbooks.Open(_testFile);
+            Excel.Sheets sheets = _workbook.Worksheets;
             Excel.Worksheet sheet = (Excel.Worksheet) sheets.Item[1];
             var cell = (Excel.Range) sheet.Cells[1, 1];
             string testValue = (string) cell.Value;
-            ExcelClose(workbook, application);
 
             Assert.AreEqual(testText, testValue);
         }
@@ -94,9 +99,9 @@ namespace ExcelInteractionTests
             xlDoc.SetBorder(sheetName, "A", 1, BorderStyleValues.Thick);
             xlDoc.Save();
 
-            Excel.Application application = new Excel.ApplicationClass();
-            Excel.Workbook workbook = application.Workbooks.Open(_testFile);
-            Excel.Sheets sheets = workbook.Worksheets;
+            _application = new Excel.ApplicationClass();
+            _workbook = _application.Workbooks.Open(_testFile);
+            Excel.Sheets sheets = _workbook.Worksheets;
             Excel.Worksheet sheet = (Excel.Worksheet) sheets.Item[1];
             var cell = (Excel.Range) sheet.Cells[1, 1];
 
