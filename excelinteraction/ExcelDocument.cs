@@ -4,7 +4,6 @@ using System.Xml;
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
-using DocumentFormat.OpenXml.Wordprocessing;
 using Ap = DocumentFormat.OpenXml.ExtendedProperties;
 using Border = DocumentFormat.OpenXml.Spreadsheet.Border;
 using BottomBorder = DocumentFormat.OpenXml.Spreadsheet.BottomBorder;
@@ -432,14 +431,53 @@ namespace ExcelInteraction
                 : new CellFormat();
 
             cellFormat.BorderId = InsertBorder(GenerateBorder(thickness));
-            //CellFormats formats = _workbookPart.WorkbookStylesPart.Stylesheet.Elements<CellFormats>().First();
-            //formats.Append(cellFormat);
-            //_workbookPart.WorkbookStylesPart.Stylesheet.AppendChild(formats);
 
             cell.StyleIndex = InsertCellFormat(cellFormat);
+        }
 
-            //_worksheetPart.Worksheet.Save();
-            //_workbookPart.Workbook.Save();
+        public void MakeBold(string sheetName, string columnName, uint rowIndex)
+        {
+            GetSpreadSheet(sheetName);
+            Cell cell = GetCell(columnName, rowIndex);
+
+            CellFormat cellFormat = cell.StyleIndex != null
+                ? GetCellFormat(cell.StyleIndex).CloneNode(true) as CellFormat
+                : new CellFormat();
+
+            Font font = new Font();
+            Bold bold = new Bold();
+            FontSize fontSize = new FontSize() {Val = 11D};
+            Color color = new Color() {Theme = 1U};
+            FontName name = new FontName() {Val = "Calibri"};
+            FontFamilyNumbering numbering = new FontFamilyNumbering() {Val = 2};
+            FontScheme scheme = new FontScheme() {Val = FontSchemeValues.Minor};
+
+            font.Append(bold);
+            font.Append(fontSize);
+            font.Append(color);
+            font.Append(name);
+            font.Append(numbering);
+            font.Append(scheme);
+
+            //Fonts fonts = _workbookPart.WorkbookStylesPart.Stylesheet.Fonts;
+            //fonts.Append(font);
+            //fonts.Count.Value++;
+
+            cellFormat.FontId = InsertFont(font);
+            cellFormat.ApplyFont = true;
+            //_workbookPart.WorkbookStylesPart.Stylesheet.CellFormats.AppendChild(cellFormat);
+            //_workbookPart.WorkbookStylesPart.Stylesheet.CellFormats.Count.Value++;
+            //_workbookPart.WorkbookStylesPart.Stylesheet.Save();
+
+            cell.StyleIndex = InsertCellFormat(cellFormat);
+            //cell.StyleIndex = InsertFont(font);
+        }
+
+        private uint InsertFont(Font font)
+        {
+            Fonts fonts = _workbookPart.WorkbookStylesPart.Stylesheet.Fonts;
+            fonts.Append(font);
+            return fonts.Count++;
         }
 
         private uint InsertCellFormat(CellFormat cellFormat)
