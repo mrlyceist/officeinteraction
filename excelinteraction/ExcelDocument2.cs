@@ -55,24 +55,24 @@ namespace ExcelInteraction
         
         public static void InsertText(string fileName, string text, string sheetName, string columnName, uint rowIndex)
         {
-            using (SpreadsheetDocument spreadsheet = SpreadsheetDocument.Open(fileName, true))
+            using (SpreadsheetDocument document = SpreadsheetDocument.Open(fileName, true))
             {
                 SharedStringTablePart sharedStringPart;
-                if (spreadsheet.WorkbookPart.GetPartsOfType<SharedStringTablePart>().Any())
-                    sharedStringPart = spreadsheet.WorkbookPart.GetPartsOfType<SharedStringTablePart>().First();
-                else sharedStringPart = spreadsheet.WorkbookPart.AddNewPart<SharedStringTablePart>();
+                if (document.WorkbookPart.GetPartsOfType<SharedStringTablePart>().Any())
+                    sharedStringPart = document.WorkbookPart.GetPartsOfType<SharedStringTablePart>().First();
+                else sharedStringPart = document.WorkbookPart.AddNewPart<SharedStringTablePart>();
 
                 int index = InsertSharedStringItem(text, sharedStringPart);
 
                 WorksheetPart worksheetPart = null;
                 int sheetIndex = 0;
-                foreach (WorksheetPart part in spreadsheet.WorkbookPart.WorksheetParts)
+                foreach (WorksheetPart part in document.WorkbookPart.WorksheetParts)
                 {
                     Worksheet worksheet = part.Worksheet;
-                    string name = spreadsheet.WorkbookPart.Workbook.Descendants<Sheet>().ElementAt(sheetIndex).Name;
+                    string name = document.WorkbookPart.Workbook.Descendants<Sheet>().ElementAt(sheetIndex).Name;
                     if (name == sheetName)
                     {
-                        worksheetPart = spreadsheet.WorkbookPart.GetPartsOfType<WorksheetPart>().ElementAt(sheetIndex);
+                        worksheetPart = document.WorkbookPart.GetPartsOfType<WorksheetPart>().ElementAt(sheetIndex);
                         break;
                     }
                     sheetIndex++;
@@ -80,7 +80,7 @@ namespace ExcelInteraction
 
                 if (worksheetPart == null)
                 {
-                    worksheetPart = InsertWorkSheet(spreadsheet.WorkbookPart, sheetName);
+                    worksheetPart = InsertWorkSheet(document.WorkbookPart, sheetName);
                 }
 
                 Cell cell = InsertCellInWorkSheet(columnName, rowIndex, worksheetPart);
