@@ -5,16 +5,6 @@ using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
 using Ap = DocumentFormat.OpenXml.ExtendedProperties;
-using Border = DocumentFormat.OpenXml.Spreadsheet.Border;
-using BottomBorder = DocumentFormat.OpenXml.Spreadsheet.BottomBorder;
-using Color = DocumentFormat.OpenXml.Spreadsheet.Color;
-using Font = DocumentFormat.OpenXml.Spreadsheet.Font;
-using FontCharSet = DocumentFormat.OpenXml.Spreadsheet.FontCharSet;
-using Fonts = DocumentFormat.OpenXml.Spreadsheet.Fonts;
-using FontSize = DocumentFormat.OpenXml.Spreadsheet.FontSize;
-using LeftBorder = DocumentFormat.OpenXml.Spreadsheet.LeftBorder;
-using RightBorder = DocumentFormat.OpenXml.Spreadsheet.RightBorder;
-using TopBorder = DocumentFormat.OpenXml.Spreadsheet.TopBorder;
 using Vt = DocumentFormat.OpenXml.VariantTypes;
 using X14 = DocumentFormat.OpenXml.Office2010.Excel;
 
@@ -25,7 +15,6 @@ namespace ExcelInteraction
         private SpreadsheetDocument _document;
         private WorkbookPart _workbookPart;
         private WorksheetPart _worksheetPart;
-        private Sheets _sheets;
 
         public ExcelDocument(string fileName)
         {
@@ -46,7 +35,7 @@ namespace ExcelInteraction
             GenerateStyles(workbookStyles);
 
             _workbookPart.Workbook = new Workbook();
-            _sheets = _workbookPart.Workbook.AppendChild(new Sheets());
+            _workbookPart.Workbook.AppendChild(new Sheets());
         }
 
         private void GenerateStyles(WorkbookStylesPart workbookStylesPart)
@@ -98,8 +87,6 @@ namespace ExcelInteraction
             #endregion
 
             #region Borders
-
-            //Borders borders = new Borders() {Count = 2U};
             Borders borders = new Borders() {Count = 1U};
 
             Border border1 = new Border();
@@ -115,33 +102,10 @@ namespace ExcelInteraction
             border1.Append(bottomBorder);
             border1.Append(diagonalBorder1);
 
-            //Border border2 = new Border();
-            //LeftBorder leftBorder2 = new LeftBorder() {Style = BorderStyleValues.Medium};
-            //Color color2 = new Color() {Indexed = 64U};
-            //leftBorder2.Append(color2);
-            //RightBorder rightBorder2 = new RightBorder() {Style = BorderStyleValues.Medium};
-            //Color color3 = new Color() {Indexed = 64U};
-            //rightBorder2.Append(color3);
-            //TopBorder topBorder2 = new TopBorder() {Style = BorderStyleValues.Medium};
-            //Color color4 = new Color() {Indexed = 64U};
-            //topBorder2.Append(color4);
-            //BottomBorder bottomBorder2 = new BottomBorder() {Style = BorderStyleValues.Medium};
-            //Color color5 = new Color() {Indexed = 64U};
-            //bottomBorder2.Append(color5);
-            //DiagonalBorder diagonalBorder2 = new DiagonalBorder();
-
-            //border2.Append(leftBorder2);
-            //border2.Append(rightBorder2);
-            //border2.Append(topBorder2);
-            //border2.Append(bottomBorder2);
-            //border2.Append(diagonalBorder2);
-
             borders.Append(border1);
-            //borders.Append(border2);
             #endregion
 
             #region Cell Styles And Formats
-
             CellStyleFormats cellStyleFormats = new CellStyleFormats() {Count = 1U};
             CellFormat cellFormat1 = new CellFormat()
             {
@@ -151,8 +115,7 @@ namespace ExcelInteraction
                 BorderId = 0U
             };
             cellStyleFormats.Append(cellFormat1);
-
-            //CellFormats cellFormats = new CellFormats() {Count = 2U};
+            
             CellFormats cellFormats = new CellFormats() {Count = 1U};
             CellFormat cellFormat2 = new CellFormat()
             {
@@ -162,18 +125,8 @@ namespace ExcelInteraction
                 BorderId = 0U,
                 FormatId = 0U
             };
-            //CellFormat cellFormat3 = new CellFormat()
-            //{
-            //    NumberFormatId = 0U,
-            //    FontId = 0U,
-            //    FillId = 0U,
-            //    BorderId = 1U,
-            //    FormatId = 0U,
-            //    ApplyBorder = true
-            //};
 
             cellFormats.Append(cellFormat2);
-            //cellFormats.Append(cellFormat3);
 
             CellStyles cellStyles = new CellStyles() {Count = 1U};
             CellStyle cellStyle = new CellStyle()
