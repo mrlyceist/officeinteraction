@@ -1,5 +1,7 @@
 ﻿using System;
 using System.IO;
+using System.Runtime.InteropServices;
+using DocumentFormat.OpenXml.Spreadsheet;
 using ExcelInteraction;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Excel = Microsoft.Office.Interop.Excel;
@@ -66,7 +68,7 @@ namespace ExcelInteractionTests
             Assert.AreEqual(testText, testValue);
         }
 
-        [TestMethod]
+        //[TestMethod]
         public void CanReadViaOleDb()
         {
             string testText = "testText";
@@ -75,10 +77,33 @@ namespace ExcelInteractionTests
             xlDoc.InsertText(testText, "testSheet", "A", 1);
             xlDoc.Save();
 
+            //var dataTable = NCore.General.GetTableFromExcel("D:\\RefBook.xlsx");
             var dataTable = NCore.General.GetTableFromExcel(_testFile);
-            string testValue = dataTable.Rows[0][0].ToString();
+            string testValue = dataTable.Rows[1][1].ToString();
 
             Assert.AreEqual(testText, testValue);
+        }
+
+        [TestMethod]
+        public void CanSetCellBorder()
+        {
+            string sheetName = "testSheet";
+            var xlDoc = new ExcelDocument(_testFile);
+            xlDoc.AddSpreadSheet(sheetName);
+            xlDoc.InsertText("testText", sheetName, "A", 1);
+            xlDoc.SetBorder(sheetName, "A", 1, BorderStyleValues.Thick);
+            xlDoc.Save();
+
+            Excel.Application application = new Excel.ApplicationClass();
+            Excel.Workbook workbook = application.Workbooks.Open(_testFile);
+            Excel.Sheets sheets = workbook.Worksheets;
+            Excel.Worksheet sheet = (Excel.Worksheet) sheets.Item[1];
+            var cell = (Excel.Range) sheet.Cells[1, 1];
+
+            bool bottomBorder = cell.Borders[Excel.XlBordersIndex.xlEdgeBottom].LineStyle.GetHashCode() !=
+                                Excel.XlLineStyle.xlLineStyleNone.GetHashCode();
+
+            Assert.IsTrue(bottomBorder);
         }
 
         #region Private Methods
