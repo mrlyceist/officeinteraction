@@ -426,9 +426,7 @@ namespace ExcelInteraction
 
             Cell cell = GetCell(columnName, rowIndex);
 
-            CellFormat cellFormat = cell.StyleIndex != null
-                ? GetCellFormat(cell.StyleIndex).CloneNode(true) as CellFormat
-                : new CellFormat();
+            CellFormat cellFormat = GetCellFormat(cell);
 
             cellFormat.BorderId = InsertBorder(GenerateBorder(thickness));
 
@@ -439,18 +437,15 @@ namespace ExcelInteraction
         {
             GetSpreadSheet(sheetName);
             Cell cell = GetCell(columnName, rowIndex);
-
-            CellFormat cellFormat = cell.StyleIndex != null
-                ? GetCellFormat(cell.StyleIndex).CloneNode(true) as CellFormat
-                : new CellFormat();
+            CellFormat cellFormat = GetCellFormat(cell);
 
             Font font = new Font();
             Bold bold = new Bold();
-            FontSize fontSize = new FontSize() {Val = 11D};
-            Color color = new Color() {Theme = 1U};
-            FontName name = new FontName() {Val = "Calibri"};
-            FontFamilyNumbering numbering = new FontFamilyNumbering() {Val = 2};
-            FontScheme scheme = new FontScheme() {Val = FontSchemeValues.Minor};
+            FontSize fontSize = new FontSize() { Val = 11D };
+            Color color = new Color() { Theme = 1U };
+            FontName name = new FontName() { Val = "Calibri" };
+            FontFamilyNumbering numbering = new FontFamilyNumbering() { Val = 2 };
+            FontScheme scheme = new FontScheme() { Val = FontSchemeValues.Minor };
 
             font.Append(bold);
             font.Append(fontSize);
@@ -459,18 +454,17 @@ namespace ExcelInteraction
             font.Append(numbering);
             font.Append(scheme);
 
-            //Fonts fonts = _workbookPart.WorkbookStylesPart.Stylesheet.Fonts;
-            //fonts.Append(font);
-            //fonts.Count.Value++;
-
             cellFormat.FontId = InsertFont(font);
             cellFormat.ApplyFont = true;
-            //_workbookPart.WorkbookStylesPart.Stylesheet.CellFormats.AppendChild(cellFormat);
-            //_workbookPart.WorkbookStylesPart.Stylesheet.CellFormats.Count.Value++;
-            //_workbookPart.WorkbookStylesPart.Stylesheet.Save();
 
             cell.StyleIndex = InsertCellFormat(cellFormat);
-            //cell.StyleIndex = InsertFont(font);
+        }
+
+        private CellFormat GetCellFormat(Cell cell)
+        {
+            return cell.StyleIndex != null
+                            ? GetCellFormat(cell.StyleIndex).CloneNode(true) as CellFormat
+                            : new CellFormat();
         }
 
         private uint InsertFont(Font font)
