@@ -1,4 +1,6 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
+using System.Xml;
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
@@ -22,10 +24,10 @@ namespace ExcelInteraction
         private void CreateSpreadSheetWorkBook(string fileName)
         {
             _document = SpreadsheetDocument.Create(fileName, SpreadsheetDocumentType.Workbook);
-            //SetPackageProperties(_document);
+            SetPackageProperties();
 
-            //ExtendedFilePropertiesPart extendedPropertiesPart = _document.AddExtendedFilePropertiesPart();
-            //GenerateExtendedProperties(extendedPropertiesPart);
+            ExtendedFilePropertiesPart extendedPropertiesPart = _document.AddExtendedFilePropertiesPart();
+            GenerateExtendedProperties(extendedPropertiesPart);
 
             //WorkbookStylesPart _workbookStyles = _workbook.AddNewPart<WorkbookStylesPart>("rId3");
             //GenerateStyles(_workbookStyles);
@@ -33,11 +35,17 @@ namespace ExcelInteraction
             _workbookPart = _document.AddWorkbookPart();
 
             _workbookPart.Workbook = new Workbook();
-            //_worksheetPart = _workbookPart.AddNewPart<WorksheetPart>();
-            //_worksheetPart.Worksheet = new Worksheet(new SheetData());
-
-            //_sheets = _document.WorkbookPart.Workbook.AppendChild<Sheets>(new Sheets());
             _sheets = _workbookPart.Workbook.AppendChild(new Sheets());
+        }
+
+        private void SetPackageProperties()
+        {
+            _document.PackageProperties.Creator = "Phoenix";
+            _document.PackageProperties.Created = XmlConvert.ToDateTime(DateTime.Now.ToString("O"),
+                XmlDateTimeSerializationMode.RoundtripKind);
+            _document.PackageProperties.Modified = XmlConvert.ToDateTime(DateTime.Now.ToString("O"),
+                XmlDateTimeSerializationMode.RoundtripKind);
+            _document.PackageProperties.LastModifiedBy = "Phoenix";
         }
 
         private void GenerateExtendedProperties(ExtendedFilePropertiesPart extendedPropertiesPart)
@@ -54,7 +62,7 @@ namespace ExcelInteraction
             Vt.VTVector vtVector = new Vt.VTVector()
             {
                 BaseType = Vt.VectorBaseValues.Variant,
-                Size = (UInt32Value) 2U
+                Size = 2U
             };
             Vt.Variant variant1 = new Vt.Variant();
             Vt.VTLPSTR vtlpstr = new Vt.VTLPSTR() {Text = "Spreadsheets"};
@@ -69,6 +77,35 @@ namespace ExcelInteraction
 
             headingPairs.Append(vtVector);
 
+            Ap.TitlesOfParts titlesOfParts = new Ap.TitlesOfParts();
+
+            Vt.VTVector vtVector2 = new Vt.VTVector()
+            {
+                BaseType = Vt.VectorBaseValues.Lpstr,
+                Size = 1U
+            };
+            Vt.VTLPSTR vtlpstr2 = new Vt.VTLPSTR() {Text = "testSheet"};
+            vtVector2.Append(vtlpstr2);
+
+            titlesOfParts.Append(vtVector2);
+            Ap.Company company = new Ap.Company() {Text = "BIT LLC"};
+            Ap.LinksUpToDate linksUpToDate = new Ap.LinksUpToDate() {Text = "false"};
+            Ap.SharedDocument sharedDocument = new Ap.SharedDocument() {Text = "false"};
+            Ap.HyperlinksChanged hyperlinksChanged = new Ap.HyperlinksChanged() {Text = "false"};
+            Ap.ApplicationVersion applicationVersion = new Ap.ApplicationVersion() {Text = "15.0300"};
+
+            properties.Append(application);
+            properties.Append(documentSecurity);
+            properties.Append(scaleCrop);
+            properties.Append(headingPairs);
+            properties.Append(titlesOfParts);
+            properties.Append(company);
+            properties.Append(linksUpToDate);
+            properties.Append(sharedDocument);
+            properties.Append(hyperlinksChanged);
+            properties.Append(applicationVersion);
+
+            extendedPropertiesPart.Properties = properties;
         }
 
         public void Save()
@@ -180,6 +217,11 @@ namespace ExcelInteraction
             sharedStringPart.SharedStringTable.Save();
 
             return i;
+        }
+
+        public void SetBorder(string sheetName, string columnName, uint rowIndex, BorderStyleValues thickness)
+        {
+            
         }
     }
 }
