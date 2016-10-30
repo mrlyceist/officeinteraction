@@ -11,8 +11,7 @@ namespace ExcelInteractionTests
     {
         //private string _testFile = "test.xlsx";
         private readonly string _testFile = Path.Combine(Directory.GetCurrentDirectory(), "test.xlsx");
-
-        //[TESTCLEANUP]
+        
         [TestInitialize]
         public void DeleteTestFile()
         {
@@ -39,12 +38,47 @@ namespace ExcelInteractionTests
 
             Excel.Application application = new Excel.ApplicationClass();
             Excel.Workbook workbook = application.Workbooks.Open(_testFile);
-            Excel.Sheets sheets = workbook.Worksheets;
+            //Excel.Sheets sheets = workbook.Worksheets;
             var sheetsCount = workbook.Worksheets.Count;
 
             ExcelClose(workbook, application);
 
             Assert.AreEqual(1, sheetsCount);
+        }
+
+        [TestMethod]
+        public void CanWriteTextIntoACell()
+        {
+            string testText = "testText";
+            var xlDoc = new ExcelDocument(_testFile);
+            xlDoc.AddSpreadSheet("testSheet");
+            xlDoc.InsertText(testText, "testSheet", "A", 1);
+            xlDoc.Save();
+
+            Excel.Application application = new Excel.ApplicationClass();
+            Excel.Workbook workbook = application.Workbooks.Open(_testFile);
+            Excel.Sheets sheets = workbook.Worksheets;
+            Excel.Worksheet sheet = (Excel.Worksheet) sheets.Item[1];
+            var cell = (Excel.Range) sheet.Cells[1, 1];
+            string testValue = (string) cell.Value;
+            ExcelClose(workbook, application);
+
+            Assert.AreEqual(testText, testValue);
+        }
+
+        [TestMethod]
+        public void CanReadViaOleDb()
+        {
+            string testText = "testText";
+            var xlDoc = new ExcelDocument(_testFile);
+            xlDoc.AddSpreadSheet("testSheet");
+            xlDoc.InsertText(testText, "testSheet", "A", 1);
+            xlDoc.Save();
+
+            var dataTable = NCore.General.GetTableFromExcel(_testFile);
+            string testValue = dataTable.Rows[0][0].ToString();
+
+            Assert.AreEqual(testText, testValue);
         }
 
         #region Private Methods
