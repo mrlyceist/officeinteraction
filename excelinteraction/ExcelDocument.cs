@@ -582,5 +582,32 @@ namespace ExcelInteraction
 
             return border;
         }
+
+        public void AddColumn(string sheetName, uint columnIndex, double columnWidth)
+        {
+            GetSpreadSheet(sheetName);
+            Columns columns = _worksheetPart.Worksheet.Elements<Columns>().FirstOrDefault();
+            if (columns == null)
+            {
+                SheetData sheetData = _worksheetPart.Worksheet.Elements<SheetData>().FirstOrDefault();
+                if (sheetData != null)
+                    columns = _worksheetPart.Worksheet.InsertBefore(new Columns(), sheetData);
+                else
+                {
+                    columns = new Columns();
+                    _worksheetPart.Worksheet.Append(columns);
+                }
+            }
+            Column column = new Column()
+            {
+                Min = columnIndex,
+                Max = columnIndex,
+                Width = columnWidth,
+                CustomWidth = true
+            };
+            columns.Append(column);
+            //_worksheetPart.Worksheet
+            //_worksheetPart.Worksheet.Save();
+        }
     }
 }
