@@ -18,6 +18,7 @@ namespace ExcelInteraction
         private SpreadsheetDocument _document;
         private WorkbookPart _workbookPart;
         private WorksheetPart _worksheetPart;
+        private Worksheet _workSheet;
 
         /// <summary>
         /// Создает новый пустой документ Excel. В этот документ необходимо добавть листы!
@@ -202,6 +203,9 @@ namespace ExcelInteraction
             workbookStylesPart.Stylesheet = stylesheet;
         }
 
+        /// <summary>
+        /// Создает основные свойства документа - автора, дату и время создания и модификации
+        /// </summary>
         private void SetPackageProperties()
         {
             _document.PackageProperties.Creator = "Phoenix";
@@ -293,7 +297,8 @@ namespace ExcelInteraction
         {
             _worksheetPart = _workbookPart.AddNewPart<WorksheetPart>();
             _worksheetPart.Worksheet = new Worksheet(new SheetData());
-            _worksheetPart.Worksheet.Save();
+            _workSheet = _worksheetPart.Worksheet;
+            _workSheet.Save();
 
             Sheets sheets = _workbookPart.Workbook.GetFirstChild<Sheets>();
             string relationshipId = _workbookPart.GetIdOfPart(_worksheetPart);
@@ -310,6 +315,10 @@ namespace ExcelInteraction
             };
 
             sheets.Append(sheet);
+
+            //if (_worksheetPart.Worksheet.Elements<Sheet>().All(s => s.SheetId != sheetId))
+            //    _worksheetPart.AddPart<Worksheet>(sheet);
+
 
             _workbookPart.Workbook.Save();
         }
@@ -336,7 +345,7 @@ namespace ExcelInteraction
 
             cell.CellValue = new CellValue(index.ToString());
             cell.DataType = new EnumValue<CellValues>(CellValues.SharedString);
-            _worksheetPart.Worksheet.Save();
+            _workSheet.Save();
         }
 
         /// <summary>
@@ -353,6 +362,7 @@ namespace ExcelInteraction
                 if (name == sheetName)
                 {
                     _worksheetPart = _workbookPart.GetPartsOfType<WorksheetPart>().ElementAt(sheetIndex);
+                    _workSheet = _worksheetPart.Worksheet;
                     break;
                 }
                 sheetIndex++;
@@ -370,7 +380,7 @@ namespace ExcelInteraction
         /// <returns>Ячейка</returns>
         private Cell InsertCellInWorkSheet(string columnName, uint rowIndex)
         {
-            Worksheet worksheet = _worksheetPart.Worksheet;
+            Worksheet worksheet = _workSheet;
             SheetData sheetData = worksheet.GetFirstChild<SheetData>();
             string cellReference = columnName + rowIndex;
 
@@ -520,7 +530,7 @@ namespace ExcelInteraction
         private Cell GetCell(string columnName, uint rowIndex)
         {
             var cellAddress = $"{columnName}{rowIndex}";
-            return _worksheetPart.Worksheet.Descendants<Cell>()
+            return _workSheet.Descendants<Cell>()
                 .SingleOrDefault(c => cellAddress.Equals(c.CellReference));
         }
 
@@ -583,19 +593,25 @@ namespace ExcelInteraction
             return border;
         }
 
+        /// <summary>
+        /// Вставляет в лист Excel столбец определенной ширины.
+        /// </summary>
+        /// <param name="sheetName">Лист, в который вставляем столбец</param>
+        /// <param name="columnIndex">Номер столбца по порядку, начиная с 1</param>
+        /// <param name="columnWidth">Ширина вставляемого столбца</param>
         public void AddColumn(string sheetName, uint columnIndex, double columnWidth)
         {
             GetSpreadSheet(sheetName);
-            Columns columns = _worksheetPart.Worksheet.Elements<Columns>().FirstOrDefault();
+            Columns columns = _workSheet.Elements<Columns>().FirstOrDefault();
             if (columns == null)
             {
-                SheetData sheetData = _worksheetPart.Worksheet.Elements<SheetData>().FirstOrDefault();
+                SheetData sheetData = _workSheet.Elements<SheetData>().FirstOrDefault();
                 if (sheetData != null)
-                    columns = _worksheetPart.Worksheet.InsertBefore(new Columns(), sheetData);
+                    columns = _workSheet.InsertBefore(new Columns(), sheetData);
                 else
                 {
                     columns = new Columns();
-                    _worksheetPart.Worksheet.Append(columns);
+                    _workSheet.Append(columns);
                 }
             }
             Column column = new Column()
@@ -606,8 +622,87 @@ namespace ExcelInteraction
                 CustomWidth = true
             };
             columns.Append(column);
-            //_worksheetPart.Worksheet
-            //_worksheetPart.Worksheet.Save();
+        }
+
+        /// <summary>
+        /// Объединяет ячейки на листе
+        /// </summary>
+        /// <param name="sheetName">Целевой лист Excel</param>
+        /// <param name="firstCellColumn">Имя столбца первой ячейки</param>
+        /// <param name="firstCellRow">Номер строки первой ячейки</param>
+        /// <param name="secondCellColumn">Имя столбца второй ячейки</param>
+        /// <param name="secondCellRow">Номер строки второй ячейки</param>
+        public void MergeCells(string sheetName, string firstCellColumn, uint firstCellRow, string secondCellColumn, uint secondCellRow)
+        {
+            GetSpreadSheet(sheetName);
+            if (string.IsNullOrEmpty(firstCellColumn + firstCellRow) ||
+                string.IsNullOrEmpty(secondCellColumn + secondCellRow)) return;
+            CreateCellIfNotExists(firstCellColumn, firstCellRow);
+            CreateCellIfNotExists(secondCellColumn, secondCellRow);
+
+            MergeCells mergeCells;
+            if (_workSheet.Elements<MergeCells>().Any())
+                mergeCells = _workSheet.Elements<MergeCells>().First();
+            else
+            {
+                mergeCells = new MergeCells();
+
+                if (_workSheet.Elements<CustomSheetView>().Any())
+                    _workSheet.InsertAfter(mergeCells, _workSheet.Elements<CustomSheetView>().First());
+                else if (_workSheet.Elements<DataConsolidate>().Any())
+                    _workSheet.InsertAfter(mergeCells, _workSheet.Elements<DataConsolidate>().First());
+                else if (_workSheet.Elements<SortState>().Any())
+                    _workSheet.InsertAfter(mergeCells, _workSheet.Elements<SortState>().First());
+                else if (_workSheet.Elements<AutoFilter>().Any())
+                    _workSheet.InsertAfter(mergeCells, _workSheet.Elements<AutoFilter>().First());
+                else if (_workSheet.Elements<Scenarios>().Any())
+                    _workSheet.InsertAfter(mergeCells, _workSheet.Elements<Scenarios>().First());
+                else if (_workSheet.Elements<ProtectedRanges>().Any())
+                    _workSheet.InsertAfter(mergeCells, _workSheet.Elements<ProtectedRanges>().First());
+                else if (_workSheet.Elements<SheetProtection>().Any())
+                    _workSheet.InsertAfter(mergeCells, _workSheet.Elements<SheetProtection>().First());
+                else if (_workSheet.Elements<SheetCalculationProperties>().Any())
+                    _workSheet.InsertAfter(mergeCells, _workSheet.Elements<SheetCalculationProperties>().First());
+                else
+                    _workSheet.InsertAfter(mergeCells, _workSheet.Elements<SheetData>().First());
+            }
+
+            MergeCell mergeCell = new MergeCell()
+            {
+                Reference = new StringValue($"{firstCellColumn}{firstCellRow}:{secondCellColumn}{secondCellRow}")
+            };
+            mergeCells.Append(mergeCell);
+
+            _workSheet.Save();
+        }
+
+        /// <summary>
+        /// Проверяет наличие в листе ячейки с заданным адресом,
+        /// Если не находит - создает.
+        /// </summary>
+        /// <param name="cellColumn">Имя столбца проверяемой ячейки</param>
+        /// <param name="cellRow">Номер ряда проверяемой ячейки</param>
+        private void CreateCellIfNotExists(string cellColumn, uint cellRow)
+        {
+            string cellReference = $"{cellColumn}{cellRow}";
+            var rows = _workSheet.Descendants<Row>().Where(r => r.RowIndex.Value == cellRow);
+            if (!rows.Any())
+            {
+                Row row = new Row() {RowIndex = new UInt32Value(cellRow)};
+                Cell cell = new Cell() {CellReference = new StringValue(cellReference)};
+                row.Append(cell);
+                _workSheet.Descendants<SheetData>().First().Append(row);
+                _workSheet.Save();
+            }
+            else
+            {
+                Row row = rows.First();
+                var cells = row.Elements<Cell>().Where(c => c.CellReference.Value == cellReference);
+                if (cells.Any()) return;
+                Cell cell = new Cell() {CellReference = new StringValue(cellReference)};
+                row.Append(cell);
+                _workSheet.Save();
+            }
         }
     }
 }
