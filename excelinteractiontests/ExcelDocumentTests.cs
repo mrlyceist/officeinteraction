@@ -118,6 +118,25 @@ namespace ExcelInteractionTests
             Assert.IsTrue(isBold);
         }
 
+        //[TestMethod]
+        public void BoldAndBorderAreAppliedBoth()
+        {
+            string sheetName = "testSheet";
+            var xlDoc = new ExcelDocument(_testFile);
+            xlDoc.AddSpreadSheet(sheetName);
+            xlDoc.InsertText("testText", sheetName, "A", 1);
+            xlDoc.MakeBold(sheetName, "A", 1);
+            xlDoc.SetBorder(sheetName, "A", 1, BorderStyleValues.Medium);
+            xlDoc.Save();
+
+            Excel.Range cell = GetTestCell();
+            bool isBold = (bool) cell.Font.Bold;
+            bool bottomBorder = cell.Borders[Excel.XlBordersIndex.xlEdgeBottom].LineStyle.GetHashCode() !=
+                                Excel.XlLineStyle.xlLineStyleNone.GetHashCode();
+
+            Assert.IsTrue(isBold&&bottomBorder);
+        }
+
         #region Private Methods
         private static void ExcelClose(Excel._Workbook workbook, Excel._Application application)
         {
