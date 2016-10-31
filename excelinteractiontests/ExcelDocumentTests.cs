@@ -118,7 +118,7 @@ namespace ExcelInteractionTests
             Assert.IsTrue(isBold);
         }
 
-        //[TestMethod]
+        [TestMethod]
         public void BoldAndBorderAreAppliedBoth()
         {
             string sheetName = "testSheet";
