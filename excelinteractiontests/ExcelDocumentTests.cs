@@ -137,17 +137,40 @@ namespace ExcelInteractionTests
             Assert.AreEqual(14.29, cellWidth);
         }
 
-        private void GenerateExcel()
+        //[TestMethod]
+        public void TwoSheetsWorkFineTogether()
         {
-            _sheetName = "testSheet";
-            _xlDoc = new ExcelDocument(_testFile);
-            _xlDoc.AddSpreadSheet(_sheetName);
+            _xlDoc.AddSpreadSheet(DateTime.Now.Date.ToString());
+            _xlDoc.Save();
+
+            Excel.Range cell = GetTestCell();
+            var sheetsCount = _workbook.Sheets.Count;
+
+            Assert.AreEqual(2, sheetsCount);
         }
 
-        //[TestMethod]
+        [TestMethod]
         public void CanMergeCells()
         {
+            _xlDoc.MergeCells(_sheetName, "A", 1, "B", 1);
+            _xlDoc.Save();
 
+            Excel.Range cell = GetTestCell();
+            bool isMerged = (bool) cell.MergeCells;
+
+            Assert.IsTrue(isMerged);
+        }
+
+        [TestMethod]
+        public void CanRotateDocument()
+        {
+            _xlDoc.Save();
+
+            Excel.Range cell = GetTestCell();
+            Excel.Worksheet worksheet = (Excel.Worksheet) _workbook.Worksheets.Item[1];
+            bool isLandscape = worksheet.PageSetup.Orientation == Excel.XlPageOrientation.xlLandscape;
+
+            Assert.IsTrue(isLandscape);
         }
 
         #region Private Methods
@@ -160,6 +183,13 @@ namespace ExcelInteractionTests
             System.Runtime.InteropServices.Marshal.ReleaseComObject(application);
 
             GC.Collect();
+        }
+
+        private void GenerateExcel()
+        {
+            _sheetName = "testSheet";
+            _xlDoc = new ExcelDocument(_testFile);
+            _xlDoc.AddSpreadSheet(_sheetName);
         }
 
         private Excel.Range GetTestCell()
