@@ -16,11 +16,19 @@ namespace ExcelInteraction
         private WorkbookPart _workbookPart;
         private WorksheetPart _worksheetPart;
 
+        /// <summary>
+        /// Создает новый пустой документ Excel. В этот документ необходимо добавть листы!
+        /// </summary>
+        /// <param name="fileName">Полный путь к документу</param>
         public ExcelDocument(string fileName)
         {
             CreateSpreadSheetWorkBook(fileName);
         }
 
+        /// <summary>
+        /// Создает заготовку для документа Excel
+        /// </summary>
+        /// <param name="fileName">Полный путь к файлу</param>
         private void CreateSpreadSheetWorkBook(string fileName)
         {
             _document = SpreadsheetDocument.Create(fileName, SpreadsheetDocumentType.Workbook);
@@ -38,6 +46,10 @@ namespace ExcelInteraction
             _workbookPart.Workbook.AppendChild(new Sheets());
         }
 
+        /// <summary>
+        /// Создает стилевую составляющую документа
+        /// </summary>
+        /// <param name="workbookStylesPart">Стилевая часть книги</param>
         private void GenerateStyles(WorkbookStylesPart workbookStylesPart)
         {
             Stylesheet stylesheet = new Stylesheet()
@@ -197,6 +209,10 @@ namespace ExcelInteraction
             _document.PackageProperties.LastModifiedBy = "Phoenix";
         }
 
+        /// <summary>
+        /// Создает расширенные свойства документа
+        /// </summary>
+        /// <param name="extendedPropertiesPart"></param>
         private void GenerateExtendedProperties(ExtendedFilePropertiesPart extendedPropertiesPart)
         {
             Ap.Properties properties = new Ap.Properties();
@@ -257,12 +273,19 @@ namespace ExcelInteraction
             extendedPropertiesPart.Properties = properties;
         }
 
+        /// <summary>
+        /// Сохраняет изменения в документе.
+        /// </summary>
         public void Save()
         {
             _workbookPart.Workbook.Save();
             _document.Close();
         }
 
+        /// <summary>
+        /// Добавляет лист в документ Excel
+        /// </summary>
+        /// <param name="sheetName">Имя добавляемого листа</param>
         public void AddSpreadSheet(string sheetName)
         {
             _worksheetPart = _workbookPart.AddNewPart<WorksheetPart>();
@@ -288,6 +311,13 @@ namespace ExcelInteraction
             _workbookPart.Workbook.Save();
         }
 
+        /// <summary>
+        /// Записывает текст в виде строки в ячейку на листе
+        /// </summary>
+        /// <param name="text">Записываемый текст</param>
+        /// <param name="sheetName">Имя листа</param>
+        /// <param name="columnName">Адрес ячейки, имя столбца</param>
+        /// <param name="rowIndex">Адрес ячейки, номер ряда</param>
         public void InsertText(string text, string sheetName, string columnName, uint rowIndex)
         {
             SharedStringTablePart sharedStringPart;
@@ -306,6 +336,10 @@ namespace ExcelInteraction
             _worksheetPart.Worksheet.Save();
         }
 
+        /// <summary>
+        /// Ищет в документе лист с определенным именем. Если не находит - создает.
+        /// </summary>
+        /// <param name="sheetName">Имя листа</param>
         private void GetSpreadSheet(string sheetName)
         {
             int sheetIndex = 0;
@@ -325,6 +359,12 @@ namespace ExcelInteraction
                 AddSpreadSheet(sheetName);
         }
 
+        /// <summary>
+        /// Добавляет ячейку на лист
+        /// </summary>
+        /// <param name="columnName">Адрес ячейки, имя столбца</param>
+        /// <param name="rowIndex">Адрес ячейки, номер строки</param>
+        /// <returns>Ячейка</returns>
         private Cell InsertCellInWorkSheet(string columnName, uint rowIndex)
         {
             Worksheet worksheet = _worksheetPart.Worksheet;
@@ -353,6 +393,12 @@ namespace ExcelInteraction
             return newCell;
         }
 
+        /// <summary>
+        /// Добавляет строковое содержимое в структуру документа
+        /// </summary>
+        /// <param name="text">добавляемая строка</param>
+        /// <param name="sharedStringPart">Часть документа, содержащая строки</param>
+        /// <returns>Номер строки в части строк</returns>
         private int InsertSharedString(string text, SharedStringTablePart sharedStringPart)
         {
             if (sharedStringPart.SharedStringTable == null)
@@ -373,6 +419,13 @@ namespace ExcelInteraction
             return i;
         }
 
+        /// <summary>
+        /// Задает границу определенной толщины у ячейки на листе
+        /// </summary>
+        /// <param name="sheetName">Лист, содержащий редактируемую ячейку</param>
+        /// <param name="columnName">Адрес ячейки, имя столбца</param>
+        /// <param name="rowIndex">Адрес ячейки, номер строки</param>
+        /// <param name="thickness">Толщина границы</param>
         public void SetBorder(string sheetName, string columnName, uint rowIndex, BorderStyleValues thickness)
         {
             GetSpreadSheet(sheetName);
@@ -386,6 +439,12 @@ namespace ExcelInteraction
             cell.StyleIndex = InsertCellFormat(cellFormat);
         }
 
+        /// <summary>
+        /// Меняет начертание текста ячейки на полужирное
+        /// </summary>
+        /// <param name="sheetName">Имя листа, содержащего редактируемую ячейку</param>
+        /// <param name="columnName">Адрес ячейки, имя столбца</param>
+        /// <param name="rowIndex">Адрес ячейки, номер строки</param>
         public void MakeBold(string sheetName, string columnName, uint rowIndex)
         {
             GetSpreadSheet(sheetName);
@@ -413,6 +472,11 @@ namespace ExcelInteraction
             cell.StyleIndex = InsertCellFormat(cellFormat);
         }
 
+        /// <summary>
+        /// Ищет формат ячейки. Если не находит - создает новый.
+        /// </summary>
+        /// <param name="cell">Ячейка, у которой ищем формат</param>
+        /// <returns>Формат ячейки</returns>
         private CellFormat GetCellFormat(Cell cell)
         {
             return cell.StyleIndex != null
@@ -420,6 +484,11 @@ namespace ExcelInteraction
                             : new CellFormat();
         }
 
+        /// <summary>
+        /// Добавляет шрифт к набору шрифтов в документе
+        /// </summary>
+        /// <param name="font">Добавляемый шрифт</param>
+        /// <returns>Номер последнего по счету шрифта в документе</returns>
         private uint InsertFont(Font font)
         {
             Fonts fonts = _workbookPart.WorkbookStylesPart.Stylesheet.Fonts;
@@ -427,6 +496,11 @@ namespace ExcelInteraction
             return fonts.Count++;
         }
 
+        /// <summary>
+        /// Добавляет формат ячейки к набору форматов в документе
+        /// </summary>
+        /// <param name="cellFormat">Добавляемый формат ячейки</param>
+        /// <returns>Номер последнего по счету формата ячейки в документе</returns>
         private uint InsertCellFormat(CellFormat cellFormat)
         {
             CellFormats cellFormats = _workbookPart.WorkbookStylesPart.Stylesheet.CellFormats;
@@ -434,6 +508,12 @@ namespace ExcelInteraction
             return cellFormats.Count++;
         }
 
+        /// <summary>
+        /// Находит ячейку на листе по заданному адресу.
+        /// </summary>
+        /// <param name="columnName">Адрес искомой ячейки, имя столбца</param>
+        /// <param name="rowIndex">Адрес искомой ячейки, номер строки</param>
+        /// <returns>Искомая ячейка</returns>
         private Cell GetCell(string columnName, uint rowIndex)
         {
             var cellAddress = $"{columnName}{rowIndex}";
@@ -441,6 +521,11 @@ namespace ExcelInteraction
                 .SingleOrDefault(c => cellAddress.Equals(c.CellReference));
         }
 
+        /// <summary>
+        /// Ищет формат ячейки по заданному стилю.
+        /// </summary>
+        /// <param name="styleIndex">Стиль?</param>
+        /// <returns>Формат ячейки</returns>
         private CellFormat GetCellFormat(uint styleIndex)
         {
             return
@@ -450,6 +535,11 @@ namespace ExcelInteraction
                     .ElementAt((int) styleIndex);
         }
 
+        /// <summary>
+        /// Добавляет границу к набуору границ в документе
+        /// </summary>
+        /// <param name="border">Добавляемая граница</param>
+        /// <returns>Номер последней по счету границы в документе</returns>
         private UInt32Value InsertBorder(Border border)
         {
             Borders borders = _workbookPart.WorkbookStylesPart.Stylesheet.Elements<Borders>().First();
@@ -457,6 +547,11 @@ namespace ExcelInteraction
             return borders.Count++;
         }
 
+        /// <summary>
+        /// Создает границу черного цвета с заданной толщиной линии
+        /// </summary>
+        /// <param name="thickness">Толщина границы</param>
+        /// <returns>Граница</returns>
         private Border GenerateBorder(BorderStyleValues thickness)
         {
             Border border = new Border();
