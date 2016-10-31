@@ -13,12 +13,16 @@ namespace ExcelInteractionTests
         private readonly string _testFile = Path.Combine(Directory.GetCurrentDirectory(), "test.xlsx");
         private Excel.ApplicationClass _application;
         private Excel.Workbook _workbook;
+        private string _sheetName;
+        private ExcelDocument _xlDoc;
 
+        #region Initialize And Cleanup
         [TestInitialize]
         public void DeleteTestFile()
         {
             if (File.Exists(_testFile))
                 File.Delete(_testFile);
+            GenerateExcel();
         }
 
         [TestCleanup]
@@ -26,14 +30,14 @@ namespace ExcelInteractionTests
         {
             if (_application != null || _workbook != null)
                 ExcelClose(_workbook, _application);
-        }
+            _xlDoc = null;
+        } 
+        #endregion
 
         [TestMethod]
         public void CanCreateBlankDocument()
         {
-            var xldoc = new ExcelDocument(_testFile);
-            xldoc.AddSpreadSheet("test");
-            xldoc.Save();
+            _xlDoc.Save();
 
             Assert.IsTrue(File.Exists(_testFile));
         }
@@ -41,13 +45,10 @@ namespace ExcelInteractionTests
         [TestMethod]
         public void TestDocumentContainsOneSpreadSheet()
         {
-            var xldoc = new ExcelDocument(_testFile);
-            xldoc.AddSpreadSheet("test");
-            xldoc.Save();
+            _xlDoc.Save();
 
             _application = new Excel.ApplicationClass();
             _workbook = _application.Workbooks.Open(_testFile);
-            //Excel.Sheets sheets = workbook.Worksheets;
             var sheetsCount = _workbook.Worksheets.Count;
 
             Assert.AreEqual(1, sheetsCount);
@@ -57,10 +58,8 @@ namespace ExcelInteractionTests
         public void CanWriteTextIntoACell()
         {
             string testText = "testText";
-            var xlDoc = new ExcelDocument(_testFile);
-            xlDoc.AddSpreadSheet("testSheet");
-            xlDoc.InsertText(testText, "testSheet", "A", 1);
-            xlDoc.Save();
+            _xlDoc.InsertText(testText, "testSheet", "A", 1);
+            _xlDoc.Save();
 
             Excel.Range cell = GetTestCell();
             string testValue = (string) cell.Value;
@@ -72,10 +71,8 @@ namespace ExcelInteractionTests
         public void CanReadViaOleDb()
         {
             string testText = "testText";
-            var xlDoc = new ExcelDocument(_testFile);
-            xlDoc.AddSpreadSheet("testSheet");
-            xlDoc.InsertText(testText, "testSheet", "A", 1);
-            xlDoc.Save();
+            _xlDoc.InsertText(testText, "testSheet", "A", 1);
+            _xlDoc.Save();
 
             //var dataTable = NCore.General.GetTableFromExcel("D:\\RefBook.xlsx");
             var dataTable = NCore.General.GetTableFromExcel(_testFile);
@@ -87,12 +84,9 @@ namespace ExcelInteractionTests
         [TestMethod]
         public void CanSetCellBorder()
         {
-            string sheetName = "testSheet";
-            var xlDoc = new ExcelDocument(_testFile);
-            xlDoc.AddSpreadSheet(sheetName);
-            xlDoc.InsertText("testText", sheetName, "A", 1);
-            xlDoc.SetBorder(sheetName, "A", 1, BorderStyleValues.Thick);
-            xlDoc.Save();
+            _xlDoc.InsertText("testText", _sheetName, "A", 1);
+            _xlDoc.SetBorder(_sheetName, "A", 1, BorderStyleValues.Thick);
+            _xlDoc.Save();
 
             Excel.Range cell = GetTestCell();
             bool bottomBorder = cell.Borders[Excel.XlBordersIndex.xlEdgeBottom].LineStyle.GetHashCode() !=
@@ -104,12 +98,9 @@ namespace ExcelInteractionTests
         [TestMethod]
         public void CanMakeCellBold()
         {
-            string sheetName = "testSheet";
-            var xlDoc = new ExcelDocument(_testFile);
-            xlDoc.AddSpreadSheet(sheetName);
-            xlDoc.InsertText("testText", sheetName, "A", 1);
-            xlDoc.MakeBold(sheetName, "A", 1);
-            xlDoc.Save();
+            _xlDoc.InsertText("testText", _sheetName, "A", 1);
+            _xlDoc.MakeBold(_sheetName, "A", 1);
+            _xlDoc.Save();
 
             Excel.Range cell = GetTestCell();
             bool isBold = (bool) cell.Font.Bold;
@@ -120,13 +111,10 @@ namespace ExcelInteractionTests
         [TestMethod]
         public void BoldAndBorderAreAppliedBoth()
         {
-            string sheetName = "testSheet";
-            var xlDoc = new ExcelDocument(_testFile);
-            xlDoc.AddSpreadSheet(sheetName);
-            xlDoc.InsertText("testText", sheetName, "A", 1);
-            xlDoc.MakeBold(sheetName, "A", 1);
-            xlDoc.SetBorder(sheetName, "A", 1, BorderStyleValues.Medium);
-            xlDoc.Save();
+            _xlDoc.InsertText("testText", _sheetName, "A", 1);
+            _xlDoc.MakeBold(_sheetName, "A", 1);
+            _xlDoc.SetBorder(_sheetName, "A", 1, BorderStyleValues.Medium);
+            _xlDoc.Save();
 
             Excel.Range cell = GetTestCell();
             bool isBold = (bool) cell.Font.Bold;
@@ -139,17 +127,21 @@ namespace ExcelInteractionTests
         [TestMethod]
         public void CanSetNewCellWidth()
         {
-            string sheetName = "testSheet";
-            var xlDoc = new ExcelDocument(_testFile);
-            xlDoc.AddSpreadSheet(sheetName);
-            xlDoc.AddColumn(sheetName, 1, 15D);
-            xlDoc.InsertText("testText", sheetName, "A", 1);
-            xlDoc.Save();
+            _xlDoc.AddColumn(_sheetName, 1, 15D);
+            _xlDoc.InsertText("testText", _sheetName, "A", 1);
+            _xlDoc.Save();
 
             Excel.Range cell = GetTestCell();
-            double cellWidth = (double) cell.ColumnWidth;
+            double cellWidth = (double)cell.ColumnWidth;
 
             Assert.AreEqual(14.29, cellWidth);
+        }
+
+        private void GenerateExcel()
+        {
+            _sheetName = "testSheet";
+            _xlDoc = new ExcelDocument(_testFile);
+            _xlDoc.AddSpreadSheet(_sheetName);
         }
 
         //[TestMethod]
