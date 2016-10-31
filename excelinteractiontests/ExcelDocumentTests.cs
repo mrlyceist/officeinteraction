@@ -1,6 +1,5 @@
 ﻿using System;
 using System.IO;
-using System.Runtime.InteropServices;
 using DocumentFormat.OpenXml.Spreadsheet;
 using ExcelInteraction;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -135,6 +134,28 @@ namespace ExcelInteractionTests
                                 Excel.XlLineStyle.xlLineStyleNone.GetHashCode();
 
             Assert.IsTrue(isBold&&bottomBorder);
+        }
+
+        [TestMethod]
+        public void CanSetNewCellWidth()
+        {
+            string sheetName = "testSheet";
+            var xlDoc = new ExcelDocument(_testFile);
+            xlDoc.AddSpreadSheet(sheetName);
+            xlDoc.AddColumn(sheetName, 1, 15D);
+            xlDoc.InsertText("testText", sheetName, "A", 1);
+            xlDoc.Save();
+
+            Excel.Range cell = GetTestCell();
+            double cellWidth = (double) cell.ColumnWidth;
+
+            Assert.AreEqual(14.29, cellWidth);
+        }
+
+        //[TestMethod]
+        public void CanMergeCells()
+        {
+
         }
 
         #region Private Methods
