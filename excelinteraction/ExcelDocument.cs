@@ -30,6 +30,11 @@ namespace ExcelInteraction
         }
 
         /// <summary>
+        /// Имя первого по счету листа в книге.
+        /// </summary>
+        public string FirstSheetName => _workbookPart.Workbook.Descendants<Sheet>().First().Name;
+
+        /// <summary>
         /// Создает новый пустой документ Excel. В этот документ необходимо добавть листы!
         /// </summary>
         /// <param name="fileName">Полный путь к документу</param>
