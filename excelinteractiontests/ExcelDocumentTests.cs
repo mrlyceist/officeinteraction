@@ -164,7 +164,10 @@ namespace ExcelInteractionTests
         [TestMethod]
         public void CanRotateDocument()
         {
+            _xlDoc.InsertText("testText", _sheetName, "A", 1);
+            _xlDoc.RotateLandscape();
             _xlDoc.Save();
+            //ExcelDocument.SetLandscape(_xlDoc.Document);
 
             Excel.Range cell = GetTestCell();
             Excel.Worksheet worksheet = (Excel.Worksheet) _workbook.Worksheets.Item[1];
