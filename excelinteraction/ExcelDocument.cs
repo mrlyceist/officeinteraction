@@ -21,6 +21,15 @@ namespace ExcelInteraction
         private Worksheet _workSheet;
 
         /// <summary>
+        /// Объект документа Excel
+        /// </summary>
+        public SpreadsheetDocument Document
+        {
+            get{ return _document;}
+            set{_document = value;}
+        }
+
+        /// <summary>
         /// Создает новый пустой документ Excel. В этот документ необходимо добавть листы!
         /// </summary>
         /// <param name="fileName">Полный путь к документу</param>
@@ -703,6 +712,36 @@ namespace ExcelInteraction
                 row.Append(cell);
                 _workSheet.Save();
             }
+        }
+
+        /// <summary>
+        /// Поворачивает документ в ландшафтную ориентацию
+        /// </summary>
+        public void RotateLandscape()
+        {
+            WorkbookPart workbookPart = _document.WorkbookPart;
+            var worksheetIds = workbookPart.Workbook.Descendants<Sheet>().Select(s => s.Id.Value);
+            foreach (string worksheetId in worksheetIds)
+            {
+                var worksheetPart = ((WorksheetPart) workbookPart.GetPartById(worksheetId));
+                PageSetup pageSetup = worksheetPart.Worksheet.Descendants<PageSetup>().FirstOrDefault();
+                if (pageSetup != null)
+                {
+                    pageSetup = new PageSetup
+                    {
+                        Orientation = OrientationValues.Landscape,
+                        PaperSize = 9U
+                    };
+                    worksheetPart.Worksheet.AppendChild(pageSetup);
+                }
+                else
+                {
+                    pageSetup = new PageSetup() {Orientation = OrientationValues.Landscape};
+                    worksheetPart.Worksheet.AppendChild(pageSetup);
+                }
+                worksheetPart.Worksheet.Save();
+            }
+            workbookPart.Workbook.Save();
         }
     }
 }
