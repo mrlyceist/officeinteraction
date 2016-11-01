@@ -175,6 +175,15 @@ namespace ExcelInteractionTests
             Assert.IsTrue(isLandscape);
         }
 
+        [TestMethod]
+        public void SheetNameReturnsRightString()
+        {
+            string name = _xlDoc.FirstSheetName;
+            _xlDoc.Save();
+
+            Assert.AreEqual(_sheetName, name);
+        }
+
         #region Private Methods
         private static void ExcelClose(Excel._Workbook workbook, Excel._Application application)
         {
