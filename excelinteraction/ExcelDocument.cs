@@ -544,6 +544,7 @@ namespace ExcelInteraction
         private Cell GetCell(string columnName, uint rowIndex)
         {
             var cellAddress = $"{columnName}{rowIndex}";
+            CreateCellIfNotExists(columnName, rowIndex);
             return _workSheet.Descendants<Cell>()
                 .SingleOrDefault(c => cellAddress.Equals(c.CellReference));
         }
