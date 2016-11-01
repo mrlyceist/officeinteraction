@@ -719,12 +719,10 @@ namespace ExcelInteraction
         /// </summary>
         public void RotateLandscape()
         {
-            WorkbookPart workbookPart = _document.WorkbookPart;
-            var worksheetIds = workbookPart.Workbook.Descendants<Sheet>().Select(s => s.Id.Value);
+            var worksheetIds = _workbookPart.Workbook.Descendants<Sheet>().Select(s => s.Id.Value);
             foreach (string worksheetId in worksheetIds)
             {
-                var worksheetPart = ((WorksheetPart) workbookPart.GetPartById(worksheetId));
-                PageSetup pageSetup = worksheetPart.Worksheet.Descendants<PageSetup>().FirstOrDefault();
+                PageSetup pageSetup = _workSheet.Descendants<PageSetup>().FirstOrDefault();
                 if (pageSetup != null)
                 {
                     pageSetup = new PageSetup
@@ -732,16 +730,16 @@ namespace ExcelInteraction
                         Orientation = OrientationValues.Landscape,
                         PaperSize = 9U
                     };
-                    worksheetPart.Worksheet.AppendChild(pageSetup);
+                    _workSheet.AppendChild(pageSetup);
                 }
                 else
                 {
                     pageSetup = new PageSetup() {Orientation = OrientationValues.Landscape};
-                    worksheetPart.Worksheet.AppendChild(pageSetup);
+                    _workSheet.AppendChild(pageSetup);
                 }
-                worksheetPart.Worksheet.Save();
+                _workSheet.Save();
             }
-            workbookPart.Workbook.Save();
+            _workbookPart.Workbook.Save();
         }
     }
 }
