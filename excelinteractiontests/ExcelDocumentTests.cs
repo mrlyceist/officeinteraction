@@ -184,6 +184,33 @@ namespace ExcelInteractionTests
             Assert.AreEqual(_sheetName, name);
         }
 
+        //[TestMethod]
+        public void CanSetBorderOnRange()
+        {
+            _xlDoc.SetBorder(_sheetName, "A", 1, "B", 2, BorderStyleValues.Thick);
+            _xlDoc.Save();
+
+            _application = new Excel.ApplicationClass();
+            _workbook = _application.Workbooks.Open(_testFile);
+            Excel.Sheets sheets = _workbook.Worksheets;
+            Excel.Worksheet sheet = (Excel.Worksheet)sheets.Item[1];
+            var range = sheet.Range[sheet.Cells[1, 1], sheet.Cells[2, 2]];
+            bool hasOuterBorders = range.Borders[Excel.XlBordersIndex.xlEdgeBottom].LineStyle.GetHashCode() !=
+                                   Excel.XlLineStyle.xlLineStyleNone.GetHashCode() &&
+                                   range.Borders[Excel.XlBordersIndex.xlEdgeTop].LineStyle.GetHashCode() !=
+                                   Excel.XlLineStyle.xlLineStyleNone.GetHashCode() &&
+                                   range.Borders[Excel.XlBordersIndex.xlEdgeLeft].LineStyle.GetHashCode() !=
+                                   Excel.XlLineStyle.xlLineStyleNone.GetHashCode() &&
+                                   range.Borders[Excel.XlBordersIndex.xlEdgeRight].LineStyle.GetHashCode() !=
+                                   Excel.XlLineStyle.xlLineStyleNone.GetHashCode();
+            bool hasNotInnerBorders = range.Borders[Excel.XlBordersIndex.xlInsideHorizontal].LineStyle.GetHashCode() ==
+                                      Excel.XlLineStyle.xlLineStyleNone.GetHashCode() &&
+                                      range.Borders[Excel.XlBordersIndex.xlInsideVertical].LineStyle.GetHashCode() ==
+                                      Excel.XlLineStyle.xlLineStyleNone.GetHashCode();
+
+            Assert.IsTrue(hasOuterBorders && hasNotInnerBorders);
+        }
+
         #region Private Methods
         private static void ExcelClose(Excel._Workbook workbook, Excel._Application application)
         {
