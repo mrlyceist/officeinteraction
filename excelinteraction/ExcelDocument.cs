@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Xml;
@@ -9,7 +10,7 @@ using Ap = DocumentFormat.OpenXml.ExtendedProperties;
 using Vt = DocumentFormat.OpenXml.VariantTypes;
 using X14 = DocumentFormat.OpenXml.Office2010.Excel;
 
-[assembly: InternalsVisibleTo("ExcelDocumentTests")]
+[assembly: InternalsVisibleTo("ExcelInteractionTests")]
 namespace ExcelInteraction
 {
     /// <summary>
@@ -388,53 +389,6 @@ namespace ExcelInteraction
         }
 
         /// <summary>
-        /// WAT?!?!?!
-        /// </summary>
-        /// <param name="styleId"></param>
-        /// <param name="thickness"></param>
-        private void CreateStyle(ref UInt32Value styleId, EnumValue<BorderStyleValues> thickness)
-        {
-            WorkbookStylesPart stylesPart = _workbookPart.GetPartsOfType<WorkbookStylesPart>().ToList()[0];
-            Stylesheet stylesheet = stylesPart.Stylesheet;
-            Borders borders = stylesheet.Borders;
-            UInt32Value borderId = null;
-            Border border = new Border();
-            LeftBorder leftBorder = new LeftBorder() { Style = thickness };
-            Color leftBorderColor = new Color() { Auto = true };
-            leftBorder.Append(leftBorderColor);
-            border.Append(leftBorder);
-
-            RightBorder rightBorder = new RightBorder() { Style = thickness };
-            Color rightBorderColor = new Color() { Auto = true };
-            rightBorder.Append(rightBorderColor);
-            border.Append(rightBorder);
-
-            TopBorder topBorder = new TopBorder() { Style = thickness };
-            Color topBorderColor = new Color() { Auto = true };
-            topBorder.Append(topBorderColor);
-            border.Append(topBorder);
-
-            BottomBorder bottomBorder = new BottomBorder() { Style = thickness };
-            Color bottomBorderColor = new Color() { Auto = true };
-            bottomBorder.Append(bottomBorderColor);
-            border.Append(bottomBorder);
-
-            borders.Append(border);
-            borderId = UInt32Value.FromUInt32((uint)(borders.Descendants<Border>().Count() - 1));
-            CellFormats cellFormats = stylesheet.CellFormats;
-            CellFormat cellFormat = new CellFormat()
-            {
-                NumberFormatId = 0U,
-                FontId = 0U,
-                BorderId = borderId,
-                FormatId = 0U,
-                ApplyBorder = true
-            };
-            cellFormats.Append(cellFormat);
-            styleId = UInt32Value.FromUInt32((uint)(cellFormats.Descendants<CellFormat>().Count() - 1));
-        }
-
-        /// <summary>
         /// Ищет формат ячейки. Если не находит - создает новый.
         /// </summary>
         /// <param name="cell">Ячейка, у которой ищем формат</param>
@@ -482,6 +436,35 @@ namespace ExcelInteraction
             CreateCellIfNotExists(columnName, rowIndex);
             return _workSheet.Descendants<Cell>()
                 .SingleOrDefault(c => cellAddress.Equals(c.CellReference));
+        }
+
+        /// <summary>
+        /// Проверяет наличие в листе ячейки с заданным адресом,
+        /// Если не находит - создает.
+        /// </summary>
+        /// <param name="cellColumn">Имя столбца проверяемой ячейки</param>
+        /// <param name="cellRow">Номер ряда проверяемой ячейки</param>
+        private void CreateCellIfNotExists(string cellColumn, uint cellRow)
+        {
+            string cellReference = $"{cellColumn}{cellRow}";
+            var rows = _workSheet.Descendants<Row>().Where(r => r.RowIndex.Value == cellRow);
+            if (!rows.Any())
+            {
+                Row row = new Row() { RowIndex = new UInt32Value(cellRow) };
+                Cell cell = new Cell() { CellReference = new StringValue(cellReference) };
+                row.Append(cell);
+                _workSheet.Descendants<SheetData>().First().Append(row);
+                _workSheet.Save();
+            }
+            else
+            {
+                Row row = rows.First();
+                var cells = row.Elements<Cell>().Where(c => c.CellReference.Value == cellReference);
+                if (cells.Any()) return;
+                Cell cell = new Cell() { CellReference = new StringValue(cellReference) };
+                row.Append(cell);
+                _workSheet.Save();
+            }
         }
 
         /// <summary>
@@ -578,36 +561,37 @@ namespace ExcelInteraction
             Color color = new Color() { Indexed = 64U };
             leftBorder.Append(color);
             return leftBorder;
-        } 
+        }
         #endregion
 
         /// <summary>
-        /// Проверяет наличие в листе ячейки с заданным адресом,
-        /// Если не находит - создает.
+        /// Преобразует числовой номер столбца в буквенное имя
         /// </summary>
-        /// <param name="cellColumn">Имя столбца проверяемой ячейки</param>
-        /// <param name="cellRow">Номер ряда проверяемой ячейки</param>
-        private void CreateCellIfNotExists(string cellColumn, uint cellRow)
+        /// <param name="index">Номер столбца</param>
+        /// <returns>Имя столбца</returns>
+        internal string GetColumnName(int index)
         {
-            string cellReference = $"{cellColumn}{cellRow}";
-            var rows = _workSheet.Descendants<Row>().Where(r => r.RowIndex.Value == cellRow);
-            if (!rows.Any())
-            {
-                Row row = new Row() { RowIndex = new UInt32Value(cellRow) };
-                Cell cell = new Cell() { CellReference = new StringValue(cellReference) };
-                row.Append(cell);
-                _workSheet.Descendants<SheetData>().First().Append(row);
-                _workSheet.Save();
-            }
-            else
-            {
-                Row row = rows.First();
-                var cells = row.Elements<Cell>().Where(c => c.CellReference.Value == cellReference);
-                if (cells.Any()) return;
-                Cell cell = new Cell() { CellReference = new StringValue(cellReference) };
-                row.Append(cell);
-                _workSheet.Save();
-            }
+            const string alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+            var value = "";
+            if (index >= alphabet.Length)
+                value += alphabet[index / alphabet.Length - 1];
+            value += alphabet[index % alphabet.Length - 1];
+            return value;
+        }
+
+        /// <summary>
+        /// Преобразует буквенное имя столбца в числовой номер, начиная с 1
+        /// </summary>
+        /// <param name="columnName">Буквенное имя столбца</param>
+        /// <returns>Числовой номер столбца, начиная с 1</returns>
+        internal int GetIndexFromName(string columnName)
+        {
+            const string alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
+            if (columnName.Length > 1)
+                return alphabet.IndexOf(columnName.Substring(1)) + 27;
+
+            return alphabet.IndexOf(columnName) + 1;
         }
         #endregion
 
@@ -700,28 +684,83 @@ namespace ExcelInteraction
             cell.StyleIndex = InsertCellFormat(cellFormat);
         }
 
-        public void SetBorder(string sheetName, string columnName1, uint rowIndex1, string columnName2, uint rowIndex2, BorderStyleValues thickness)
+        /// <summary>
+        /// Задает границу определенной толщины у диапазона ячеек на листе
+        /// </summary>
+        /// <param name="sheetName">Лист, содержащий редактируемый диапазно</param>
+        /// <param name="columnName1">Имя столбца верхней левой ячейки диапазона</param>
+        /// <param name="rowIndex1">Номер строки верхней левой ячейки диапазона</param>
+        /// <param name="columnName2">Имя столбца нижней правой ячейки диапазона</param>
+        /// <param name="rowIndex2">Номер строки нижней правой ячейки диапазона</param>
+        /// <param name="thickness">Толщина границы</param>
+        public void SetBorder(string sheetName, string columnName1, uint rowIndex1, string columnName2, uint rowIndex2,
+            BorderStyleValues thickness)
         {
             GetSpreadSheet(sheetName);
+            // top border:
+            var topCells = new List<Cell>();
+            for (int i = GetIndexFromName(columnName1); i < GetIndexFromName(columnName2) + 1; i++)
+                topCells.Add(GetCell(GetColumnName(i), rowIndex1));
+            foreach (Cell cell in topCells)
+            {
+                CellFormat cellFormat = GetOrCreateCellFormat(cell);
+                cellFormat.BorderId = InsertBorder(GenerateBorder(thickness, addTopBorder: true));
+                cell.StyleIndex = InsertCellFormat(cellFormat);
+            }
 
-            UInt32Value styleId = null;
-            CreateStyle(ref styleId, thickness);
-            if (_worksheetPart != null)
+            // bottom border:
+            var bottomCells = new List<Cell>();
+            for (int i = GetIndexFromName(columnName1); i < GetIndexFromName(columnName2) + 1; i++)
+                bottomCells.Add(GetCell(GetColumnName(i), rowIndex2));
+            foreach (Cell cell in bottomCells)
             {
-                SheetData sheetData = _workSheet.Descendants<SheetData>().FirstOrDefault();
-                foreach (Row row in sheetData.Descendants<Row>())
-                {
-                    foreach (Cell cell in row.Descendants<Cell>())
-                    {
-                        cell.StyleIndex = styleId;
-                    }
-                }
+                CellFormat cellFormat = GetOrCreateCellFormat(cell);
+                cellFormat.BorderId = InsertBorder(GenerateBorder(thickness, addBottomBorder: true));
+                cell.StyleIndex = InsertCellFormat(cellFormat);
             }
-            else
+
+            // left border:
+            var leftCells = new List<Cell>();
+            for (uint i = rowIndex1; i < rowIndex2 + 1; i++)
+                leftCells.Add(GetCell(columnName1, i));
+            foreach (Cell cell in leftCells)
             {
-                return;
+                CellFormat cellFormat = GetOrCreateCellFormat(cell);
+                cellFormat.BorderId = InsertBorder(GenerateBorder(thickness, addLeftBorder: true));
+                cell.StyleIndex = InsertCellFormat(cellFormat);
             }
-            _workbookPart.Workbook.Save();
+
+            // right border:
+            var rightCells = new List<Cell>();
+            for (uint i = rowIndex1; i < rowIndex2 + 1; i++)
+                rightCells.Add(GetCell(columnName2, i));
+            foreach (Cell cell in rightCells)
+            {
+                CellFormat cellFormat = GetOrCreateCellFormat(cell);
+                cellFormat.BorderId = InsertBorder(GenerateBorder(thickness, addRightBorder: true));
+                cell.StyleIndex = InsertCellFormat(cellFormat);
+            }
+
+            // corner borders
+            Cell leftTopCell = GetCell(columnName1, rowIndex1);
+            CellFormat leftTopCellFormat = GetOrCreateCellFormat(leftTopCell);
+            leftTopCellFormat.BorderId = InsertBorder(GenerateBorder(thickness, addLeftBorder: true, addTopBorder: true));
+            leftTopCell.StyleIndex = InsertCellFormat(leftTopCellFormat);
+
+            Cell rightTopCell = GetCell(columnName2, rowIndex1);
+            CellFormat rightTopCellFormat = GetOrCreateCellFormat(rightTopCell);
+            rightTopCellFormat.BorderId = InsertBorder(GenerateBorder(thickness, addRightBorder: true, addTopBorder: true));
+            rightTopCell.StyleIndex = InsertCellFormat(rightTopCellFormat);
+
+            Cell leftBottomCell = GetCell(columnName1, rowIndex2);
+            CellFormat leftBottomCellFormat = GetOrCreateCellFormat(leftBottomCell);
+            leftBottomCellFormat.BorderId = InsertBorder(GenerateBorder(thickness, addLeftBorder: true, addBottomBorder: true));
+            leftBottomCell.StyleIndex = InsertCellFormat(leftBottomCellFormat);
+
+            Cell rightBottomCell = GetCell(columnName2, rowIndex2);
+            CellFormat rightBottomCellFormat = GetOrCreateCellFormat(rightBottomCell);
+            rightBottomCellFormat.BorderId = InsertBorder(GenerateBorder(thickness, addRightBorder: true, addBottomBorder: true));
+            rightBottomCell.StyleIndex = InsertCellFormat(rightBottomCellFormat);
         }
 
         /// <summary>
