@@ -184,7 +184,7 @@ namespace ExcelInteractionTests
             Assert.AreEqual(_sheetName, name);
         }
 
-        //[TestMethod]
+        [TestMethod]
         public void CanSetBorderOnRange()
         {
             _xlDoc.SetBorder(_sheetName, "A", 1, "B", 2, BorderStyleValues.Thick);
@@ -209,6 +209,17 @@ namespace ExcelInteractionTests
                                       Excel.XlLineStyle.xlLineStyleNone.GetHashCode();
 
             Assert.IsTrue(hasOuterBorders && hasNotInnerBorders);
+        }
+
+        [TestMethod]
+        public void GetIndexFromNameReturns2ForB()
+        {
+            _xlDoc.Save();
+            int index = _xlDoc.GetIndexFromName("B");
+            int longIndex = _xlDoc.GetIndexFromName("AA");
+
+            Assert.AreEqual(2, index);
+            Assert.AreEqual(27, longIndex);
         }
 
         #region Private Methods
