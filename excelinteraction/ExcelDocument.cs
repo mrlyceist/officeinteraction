@@ -906,6 +906,20 @@ namespace ExcelInteraction
             }
             _workbookPart.Workbook.Save();
         }
+
+        /// <summary>
+        /// Удаляет ряд с листа
+        /// </summary>
+        /// <param name="sheetName">Лист, с которого необходимо удалить ряд</param>
+        /// <param name="rowIndex">Номер удаляемого ряда, начиная с 1</param>
+        public void RemoveRow(string sheetName, uint rowIndex)
+        {
+            GetSpreadSheet(sheetName);
+            Row row = _workSheet.Descendants<Row>().FirstOrDefault(r => r.RowIndex.Value == rowIndex);
+            row.Remove();
+
+            _workSheet.Save();
+        }
         #endregion
     }
 }
