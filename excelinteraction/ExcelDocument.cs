@@ -439,7 +439,7 @@ namespace ExcelInteraction
         /// </summary>
         /// <param name="cell">Ячейка, у которой ищем формат</param>
         /// <returns>Формат ячейки</returns>
-        private CellFormat GetCellFormat(Cell cell)
+        private CellFormat GetOrCreateCellFormat(Cell cell)
         {
             return cell.StyleIndex != null
                             ? GetCellFormat(cell.StyleIndex).CloneNode(true) as CellFormat
@@ -498,6 +498,7 @@ namespace ExcelInteraction
                     .ElementAt((int)styleIndex);
         }
 
+        #region Borders Section
         /// <summary>
         /// Добавляет границу к набуору границ в документе
         /// </summary>
@@ -514,34 +515,71 @@ namespace ExcelInteraction
         /// Создает границу черного цвета с заданной толщиной линии
         /// </summary>
         /// <param name="thickness">Толщина границы</param>
+        /// <param name="addLeftBorder">Задает наличие левой границы</param>
+        /// <param name="addRightBorder">Задает наличие правой границы</param>
+        /// <param name="addTopBorder">Задает наличие верхней границы</param>
+        /// <param name="addBottomBorder">Задает наличие нижней границы</param>
         /// <returns>Граница</returns>
-        private Border GenerateBorder(BorderStyleValues thickness)
+        private Border GenerateBorder(BorderStyleValues thickness, bool addLeftBorder = false,
+            bool addRightBorder = false, bool addTopBorder = false, bool addBottomBorder = false)
         {
             Border border = new Border();
-
-            LeftBorder leftBorder = new LeftBorder() { Style = thickness };
-            Color color1 = new Color() { Indexed = 64U };
-            leftBorder.Append(color1);
-
-            RightBorder rightBorder = new RightBorder() { Style = thickness };
-            Color color2 = new Color() { Indexed = 64U };
-            rightBorder.Append(color2);
-
-            TopBorder topBorder = new TopBorder() { Style = thickness };
-            Color color3 = new Color() { Indexed = 64U };
-            topBorder.Append(color3);
-
-            BottomBorder bottomBorder = new BottomBorder() { Style = thickness };
-            Color color4 = new Color() { Indexed = 64U };
-            bottomBorder.Append(color4);
-
-            border.Append(leftBorder);
-            border.Append(rightBorder);
-            border.Append(topBorder);
-            border.Append(bottomBorder);
+            if (addLeftBorder)
+            {
+                LeftBorder leftBorder = GeneerateLeftBorder(thickness);
+                border.Append(leftBorder);
+            }
+            if (addRightBorder)
+            {
+                RightBorder rightBorder = GenerateRightBorder(thickness);
+                border.Append(rightBorder);
+            }
+            if (addTopBorder)
+            {
+                TopBorder topBorder = GenerateTopBorder(thickness);
+                border.Append(topBorder);
+            }
+            if (addBottomBorder)
+            {
+                BottomBorder bottomBorder = GenerateBottomBorder(thickness);
+                border.Append(bottomBorder);
+            }
 
             return border;
         }
+
+        private static BottomBorder GenerateBottomBorder(BorderStyleValues thickness)
+        {
+            BottomBorder bottomBorder = new BottomBorder() { Style = thickness };
+            Color color = new Color() { Indexed = 64U };
+            bottomBorder.Append(color);
+            return bottomBorder;
+        }
+
+        private static TopBorder GenerateTopBorder(BorderStyleValues thickness)
+        {
+            TopBorder topBorder = new TopBorder() { Style = thickness };
+            Color color = new Color() { Indexed = 64U };
+            topBorder.Append(color);
+            return topBorder;
+        }
+
+        private static RightBorder GenerateRightBorder(BorderStyleValues thickness)
+        {
+            RightBorder rightBorder = new RightBorder() { Style = thickness };
+            Color color = new Color() { Indexed = 64U };
+            rightBorder.Append(color);
+            return rightBorder;
+        }
+
+        private static LeftBorder GeneerateLeftBorder(BorderStyleValues thickness)
+        {
+            LeftBorder leftBorder = new LeftBorder() { Style = thickness };
+            Color color = new Color() { Indexed = 64U };
+            leftBorder.Append(color);
+            return leftBorder;
+        } 
+        #endregion
 
         /// <summary>
         /// Проверяет наличие в листе ячейки с заданным адресом,
@@ -655,9 +693,9 @@ namespace ExcelInteraction
 
             Cell cell = GetCell(columnName, rowIndex);
 
-            CellFormat cellFormat = GetCellFormat(cell);
+            CellFormat cellFormat = GetOrCreateCellFormat(cell);
 
-            cellFormat.BorderId = InsertBorder(GenerateBorder(thickness));
+            cellFormat.BorderId = InsertBorder(GenerateBorder(thickness, true, true, true, true));
 
             cell.StyleIndex = InsertCellFormat(cellFormat);
         }
@@ -696,7 +734,7 @@ namespace ExcelInteraction
         {
             GetSpreadSheet(sheetName);
             Cell cell = GetCell(columnName, rowIndex);
-            CellFormat cellFormat = GetCellFormat(cell);
+            CellFormat cellFormat = GetOrCreateCellFormat(cell);
 
             Font font = new Font();
             Bold bold = new Bold();
