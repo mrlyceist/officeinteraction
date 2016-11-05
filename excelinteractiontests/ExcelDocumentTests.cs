@@ -212,6 +212,19 @@ namespace ExcelInteractionTests
         }
 
         [TestMethod]
+        public void CanDeleteRow()
+        {
+            _xlDoc.InsertText("TEST", _sheetName, "A", 1);
+            _xlDoc.RemoveRow(_sheetName, 1);
+            _xlDoc.Save();
+
+            var testCell = GetTestCell();
+            string testValue = (string) testCell.Value;
+
+            Assert.IsTrue(string.IsNullOrEmpty(testValue));
+        }
+
+        [TestMethod]
         public void GetIndexFromNameReturns2ForB()
         {
             _xlDoc.Save();
