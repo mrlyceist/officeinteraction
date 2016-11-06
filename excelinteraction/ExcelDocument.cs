@@ -797,6 +797,39 @@ namespace ExcelInteraction
         }
 
         /// <summary>
+        /// Задает размер и шрифт текста в ячейке на листе
+        /// </summary>
+        /// <param name="sheetName">Лист, содержащий редактируемую ячейку</param>
+        /// <param name="columnName">Адрес редактируемой ячейки - буквенное имя столбца</param>
+        /// <param name="rowIndex">Адрес редактируемой ячейки - номер ряда (начиная с 1)</param>
+        /// <param name="fontSize">Новый размер шрифта</param>
+        /// <param name="fontName">Новый шрифт (по умолчанию - Calibri)</param>
+        public void SetFont(string sheetName, string columnName, uint rowIndex, double fontSize, string fontName="Calibri")
+        {
+            GetSpreadSheet(sheetName);
+            Cell cell = GetCell(columnName, rowIndex);
+            CellFormat cellFormat = GetOrCreateCellFormat(cell);
+
+            Font font = new Font();
+            FontSize size = new FontSize() {Val = fontSize};
+            Color color = new Color() {Theme = 1U};
+            FontName name = new FontName() {Val = fontName};
+            FontFamilyNumbering numbering = new FontFamilyNumbering() {Val = 2};
+            FontScheme scheme = new FontScheme() {Val = FontSchemeValues.Minor};
+
+            font.Append(size);
+            font.Append(color);
+            font.Append(name);
+            font.Append(numbering);
+            font.Append(scheme);
+
+            cellFormat.FontId = InsertFont(font);
+            cellFormat.ApplyFont = true;
+
+            cell.StyleIndex = InsertCellFormat(cellFormat);
+        }
+
+        /// <summary>
         /// Вставляет в лист Excel столбец определенной ширины.
         /// </summary>
         /// <param name="sheetName">Лист, в который вставляем столбец</param>
