@@ -238,6 +238,24 @@ namespace ExcelInteractionTests
         }
 
         [TestMethod]
+        public void CanWrapText()
+        {
+            _xlDoc.InsertText("Long long text that should be wrapped", _sheetName, "A", 1);
+            _xlDoc.SetWrapping(_sheetName, "A", 1);
+            _xlDoc.Save();
+
+            //_application = new Excel.ApplicationClass();
+            //_workbook = _application.Workbooks.Open("d:\\refBook.xlsx");
+            //Excel.Sheets sheets = _workbook.Worksheets;
+            //Excel.Worksheet sheet = (Excel.Worksheet)sheets.Item[1];
+            //var testCell = (Excel.Range)sheet.Cells[1, 1];
+            var testCell = GetTestCell();
+            bool isWrapped = (bool) testCell.WrapText;
+
+            Assert.IsTrue(isWrapped);
+        }
+
+        [TestMethod]
         public void GetIndexFromNameReturns2ForB()
         {
             _xlDoc.Save();
