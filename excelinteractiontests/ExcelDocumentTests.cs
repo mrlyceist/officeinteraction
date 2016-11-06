@@ -225,6 +225,19 @@ namespace ExcelInteractionTests
         }
 
         [TestMethod]
+        public void CanSetFontHeight()
+        {
+            _xlDoc.InsertText("TEST", _sheetName, "A", 1);
+            _xlDoc.SetFont(_sheetName, "A", 1, 9);
+            _xlDoc.Save();
+
+            var testCell = GetTestCell();
+            var fontSize = testCell.Font.Size;
+
+            Assert.AreEqual(9D, fontSize);
+        }
+
+        [TestMethod]
         public void GetIndexFromNameReturns2ForB()
         {
             _xlDoc.Save();
