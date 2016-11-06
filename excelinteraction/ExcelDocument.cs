@@ -953,6 +953,22 @@ namespace ExcelInteraction
 
             _workSheet.Save();
         }
+
+        /// <summary>
+        /// Задает выравнивание ячейки по размеру текста
+        /// </summary>
+        /// <param name="sheetName">Лист, содержащий редактируемую ячейку</param>
+        /// <param name="columnName">Адрес редактируемой ячейки - буквенное имя столбца</param>
+        /// <param name="rowIndex">Адрес редактируемой ячейки - номер ряда (начиная с 1)</param>
+        /// <param name="isWrapped">Выравнивание ячейки по размеру текста (по умолчанию - да)</param>
+        public void SetWrapping(string sheetName, string columnName, uint rowIndex, bool isWrapped = true)
+        {
+            GetSpreadSheet(sheetName);
+
+            Cell cell = GetCell(columnName, rowIndex);
+            CellFormat cellFormat = new CellFormat(new Alignment() {WrapText = isWrapped});
+            cell.StyleIndex = InsertCellFormat(cellFormat);
+        }
         #endregion
     }
 }
