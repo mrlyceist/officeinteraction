@@ -256,6 +256,34 @@ namespace ExcelInteractionTests
         }
 
         [TestMethod]
+        public void CanSetBorderOnRow()
+        {
+            _xlDoc.SetBorder(_sheetName, "B", 2, "E", 2, BorderStyleValues.Thick);
+            _xlDoc.Save();
+
+            _application = new Excel.ApplicationClass();
+            _workbook = _application.Workbooks.Open(_testFile);
+            //_workbook = _application.Workbooks.Open("d:\\refBook.xlsx");
+            Excel.Sheets sheets = _workbook.Worksheets;
+            Excel.Worksheet sheet = (Excel.Worksheet)sheets.Item[1];
+            var range = sheet.Range[sheet.Cells[2, 2], sheet.Cells[2, 5]];
+            bool hasOuterBorders = range.Borders[Excel.XlBordersIndex.xlEdgeBottom].LineStyle.GetHashCode() !=
+                                   Excel.XlLineStyle.xlLineStyleNone.GetHashCode() &&
+                                   range.Borders[Excel.XlBordersIndex.xlEdgeTop].LineStyle.GetHashCode() !=
+                                   Excel.XlLineStyle.xlLineStyleNone.GetHashCode() &&
+                                   range.Borders[Excel.XlBordersIndex.xlEdgeLeft].LineStyle.GetHashCode() !=
+                                   Excel.XlLineStyle.xlLineStyleNone.GetHashCode() &&
+                                   range.Borders[Excel.XlBordersIndex.xlEdgeRight].LineStyle.GetHashCode() !=
+                                   Excel.XlLineStyle.xlLineStyleNone.GetHashCode();
+            bool hasNotInnerBorders = range.Borders[Excel.XlBordersIndex.xlInsideHorizontal].LineStyle.GetHashCode() ==
+                                      Excel.XlLineStyle.xlLineStyleNone.GetHashCode() &&
+                                      range.Borders[Excel.XlBordersIndex.xlInsideVertical].LineStyle.GetHashCode() ==
+                                      Excel.XlLineStyle.xlLineStyleNone.GetHashCode();
+
+            Assert.IsTrue(hasOuterBorders && hasNotInnerBorders);
+        }
+
+        [TestMethod]
         public void GetIndexFromNameReturns2ForB()
         {
             _xlDoc.Save();
