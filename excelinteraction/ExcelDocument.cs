@@ -697,70 +697,102 @@ namespace ExcelInteraction
             BorderStyleValues thickness)
         {
             GetSpreadSheet(sheetName);
-            // top border:
-            var topCells = new List<Cell>();
-            for (int i = GetIndexFromName(columnName1); i < GetIndexFromName(columnName2) + 1; i++)
-                topCells.Add(GetCell(GetColumnName(i), rowIndex1));
-            foreach (Cell cell in topCells)
+
+            if (rowIndex1 == rowIndex2)
             {
-                CellFormat cellFormat = GetOrCreateCellFormat(cell);
-                cellFormat.BorderId = InsertBorder(GenerateBorder(thickness, addTopBorder: true));
-                cell.StyleIndex = InsertCellFormat(cellFormat);
+                var rowCells = new List<Cell>();
+                for (int i = GetIndexFromName(columnName1) + 1; i < GetIndexFromName(columnName2); i++)
+                    rowCells.Add(GetCell(GetColumnName(i), rowIndex1));
+                foreach (Cell cell in rowCells)
+                {
+                    CellFormat cellFormat = GetOrCreateCellFormat(cell);
+                    cellFormat.BorderId =
+                        InsertBorder(GenerateBorder(thickness, addBottomBorder: true, addTopBorder: true));
+                    cell.StyleIndex = InsertCellFormat(cellFormat);
+                }
+                Cell leftCell = GetCell(columnName1, rowIndex1);
+                CellFormat leftCellFormat = GetOrCreateCellFormat(leftCell);
+                leftCellFormat.BorderId =
+                    InsertBorder(GenerateBorder(thickness, addBottomBorder: true, addLeftBorder: true,
+                        addTopBorder: true));
+                leftCell.StyleIndex = InsertCellFormat(leftCellFormat);
+
+                // todo: мусульманин (про Афган)
+                Cell rightCell = GetCell(columnName2, rowIndex1);
+                CellFormat rightCellFormat = GetOrCreateCellFormat(rightCell);
+                rightCellFormat.BorderId =
+                    InsertBorder(GenerateBorder(thickness, addBottomBorder: true, addTopBorder: true,
+                        addRightBorder: true));
+                rightCell.StyleIndex = InsertCellFormat(rightCellFormat);
             }
 
-            // bottom border:
-            var bottomCells = new List<Cell>();
-            for (int i = GetIndexFromName(columnName1); i < GetIndexFromName(columnName2) + 1; i++)
-                bottomCells.Add(GetCell(GetColumnName(i), rowIndex2));
-            foreach (Cell cell in bottomCells)
+            else
             {
-                CellFormat cellFormat = GetOrCreateCellFormat(cell);
-                cellFormat.BorderId = InsertBorder(GenerateBorder(thickness, addBottomBorder: true));
-                cell.StyleIndex = InsertCellFormat(cellFormat);
+                // top border:
+                var topCells = new List<Cell>();
+                for (int i = GetIndexFromName(columnName1); i < GetIndexFromName(columnName2) + 1; i++)
+                    topCells.Add(GetCell(GetColumnName(i), rowIndex1));
+                foreach (Cell cell in topCells)
+                {
+                    CellFormat cellFormat = GetOrCreateCellFormat(cell);
+                    cellFormat.BorderId = InsertBorder(GenerateBorder(thickness, addTopBorder: true));
+                    cell.StyleIndex = InsertCellFormat(cellFormat);
+                }
+
+                // bottom border:
+                var bottomCells = new List<Cell>();
+                for (int i = GetIndexFromName(columnName1); i < GetIndexFromName(columnName2) + 1; i++)
+                    bottomCells.Add(GetCell(GetColumnName(i), rowIndex2));
+                foreach (Cell cell in bottomCells)
+                {
+                    CellFormat cellFormat = GetOrCreateCellFormat(cell);
+                    cellFormat.BorderId = InsertBorder(GenerateBorder(thickness, addBottomBorder: true));
+                    cell.StyleIndex = InsertCellFormat(cellFormat);
+                }
+
+                // left border:
+                var leftCells = new List<Cell>();
+                for (uint i = rowIndex1; i < rowIndex2 + 1; i++)
+                    leftCells.Add(GetCell(columnName1, i));
+                foreach (Cell cell in leftCells)
+                {
+                    CellFormat cellFormat = GetOrCreateCellFormat(cell);
+                    cellFormat.BorderId = InsertBorder(GenerateBorder(thickness, addLeftBorder: true));
+                    cell.StyleIndex = InsertCellFormat(cellFormat);
+                }
+
+                // right border:
+                var rightCells = new List<Cell>();
+                for (uint i = rowIndex1; i < rowIndex2 + 1; i++)
+                    rightCells.Add(GetCell(columnName2, i));
+                foreach (Cell cell in rightCells)
+                {
+                    CellFormat cellFormat = GetOrCreateCellFormat(cell);
+                    cellFormat.BorderId = InsertBorder(GenerateBorder(thickness, addRightBorder: true));
+                    cell.StyleIndex = InsertCellFormat(cellFormat);
+                }
+
+                // corner borders
+                Cell leftTopCell = GetCell(columnName1, rowIndex1);
+                CellFormat leftTopCellFormat = GetOrCreateCellFormat(leftTopCell);
+                leftTopCellFormat.BorderId = InsertBorder(GenerateBorder(thickness, addLeftBorder: true, addTopBorder: true));
+                leftTopCell.StyleIndex = InsertCellFormat(leftTopCellFormat);
+
+                Cell rightTopCell = GetCell(columnName2, rowIndex1);
+                CellFormat rightTopCellFormat = GetOrCreateCellFormat(rightTopCell);
+                rightTopCellFormat.BorderId = InsertBorder(GenerateBorder(thickness, addRightBorder: true, addTopBorder: true));
+                rightTopCell.StyleIndex = InsertCellFormat(rightTopCellFormat);
+
+                Cell leftBottomCell = GetCell(columnName1, rowIndex2);
+                CellFormat leftBottomCellFormat = GetOrCreateCellFormat(leftBottomCell);
+                leftBottomCellFormat.BorderId = InsertBorder(GenerateBorder(thickness, addLeftBorder: true, addBottomBorder: true));
+                leftBottomCell.StyleIndex = InsertCellFormat(leftBottomCellFormat);
+
+                Cell rightBottomCell = GetCell(columnName2, rowIndex2);
+                CellFormat rightBottomCellFormat = GetOrCreateCellFormat(rightBottomCell);
+                rightBottomCellFormat.BorderId = InsertBorder(GenerateBorder(thickness, addRightBorder: true, addBottomBorder: true));
+                rightBottomCell.StyleIndex = InsertCellFormat(rightBottomCellFormat); 
             }
-
-            // left border:
-            var leftCells = new List<Cell>();
-            for (uint i = rowIndex1; i < rowIndex2 + 1; i++)
-                leftCells.Add(GetCell(columnName1, i));
-            foreach (Cell cell in leftCells)
-            {
-                CellFormat cellFormat = GetOrCreateCellFormat(cell);
-                cellFormat.BorderId = InsertBorder(GenerateBorder(thickness, addLeftBorder: true));
-                cell.StyleIndex = InsertCellFormat(cellFormat);
-            }
-
-            // right border:
-            var rightCells = new List<Cell>();
-            for (uint i = rowIndex1; i < rowIndex2 + 1; i++)
-                rightCells.Add(GetCell(columnName2, i));
-            foreach (Cell cell in rightCells)
-            {
-                CellFormat cellFormat = GetOrCreateCellFormat(cell);
-                cellFormat.BorderId = InsertBorder(GenerateBorder(thickness, addRightBorder: true));
-                cell.StyleIndex = InsertCellFormat(cellFormat);
-            }
-
-            // corner borders
-            Cell leftTopCell = GetCell(columnName1, rowIndex1);
-            CellFormat leftTopCellFormat = GetOrCreateCellFormat(leftTopCell);
-            leftTopCellFormat.BorderId = InsertBorder(GenerateBorder(thickness, addLeftBorder: true, addTopBorder: true));
-            leftTopCell.StyleIndex = InsertCellFormat(leftTopCellFormat);
-
-            Cell rightTopCell = GetCell(columnName2, rowIndex1);
-            CellFormat rightTopCellFormat = GetOrCreateCellFormat(rightTopCell);
-            rightTopCellFormat.BorderId = InsertBorder(GenerateBorder(thickness, addRightBorder: true, addTopBorder: true));
-            rightTopCell.StyleIndex = InsertCellFormat(rightTopCellFormat);
-
-            Cell leftBottomCell = GetCell(columnName1, rowIndex2);
-            CellFormat leftBottomCellFormat = GetOrCreateCellFormat(leftBottomCell);
-            leftBottomCellFormat.BorderId = InsertBorder(GenerateBorder(thickness, addLeftBorder: true, addBottomBorder: true));
-            leftBottomCell.StyleIndex = InsertCellFormat(leftBottomCellFormat);
-
-            Cell rightBottomCell = GetCell(columnName2, rowIndex2);
-            CellFormat rightBottomCellFormat = GetOrCreateCellFormat(rightBottomCell);
-            rightBottomCellFormat.BorderId = InsertBorder(GenerateBorder(thickness, addRightBorder: true, addBottomBorder: true));
-            rightBottomCell.StyleIndex = InsertCellFormat(rightBottomCellFormat);
         }
 
         /// <summary>
