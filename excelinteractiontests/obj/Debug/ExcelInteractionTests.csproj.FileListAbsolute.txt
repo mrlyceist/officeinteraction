@@ -1,2 +1,13 @@
 E:\dev\dotNET\officeinteraction\excelinteractiontests\obj\Debug\ExcelInteractionTests.csprojResolveAssemblyReference.cache
 E:\dev\dotNET\officeinteraction\excelinteractiontests\obj\Debug\ExcelInteractionTests.csproj.ResolveComReference.cache
+E:\dev\dotNET\officeinteraction\excelinteractiontests\bin\Debug\ExcelInteractionTests.dll
+E:\dev\dotNET\officeinteraction\excelinteractiontests\bin\Debug\ExcelInteractionTests.pdb
+E:\dev\dotNET\officeinteraction\excelinteractiontests\bin\Debug\DocumentFormat.OpenXml.dll
+E:\dev\dotNET\officeinteraction\excelinteractiontests\bin\Debug\ExcelInteraction.dll
+E:\dev\dotNET\officeinteraction\excelinteractiontests\bin\Debug\Microsoft.VisualStudio.QualityTools.UnitTestFramework.dll
+E:\dev\dotNET\officeinteraction\excelinteractiontests\bin\Debug\ExcelInteraction.pdb
+E:\dev\dotNET\officeinteraction\excelinteractiontests\bin\Debug\ExcelInteraction.xml
+E:\dev\dotNET\officeinteraction\excelinteractiontests\bin\Debug\DocumentFormat.OpenXml.xml
+E:\dev\dotNET\officeinteraction\excelinteractiontests\bin\Debug\ru\Microsoft.VisualStudio.QualityTools.UnitTestFramework.resources.dll
+E:\dev\dotNET\officeinteraction\excelinteractiontests\obj\Debug\ExcelInteractionTests.dll
+E:\dev\dotNET\officeinteraction\excelinteractiontests\obj\Debug\ExcelInteractionTests.pdb
