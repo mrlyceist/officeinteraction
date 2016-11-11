@@ -68,18 +68,18 @@ namespace ExcelInteractionTests
         }
 
         //[TestMethod]
-        public void CanReadViaOleDb()
-        {
-            string testText = "testText";
-            _xlDoc.InsertText(testText, "testSheet", "A", 1);
-            _xlDoc.Save();
+        //public void CanReadViaOleDb()
+        //{
+        //    string testText = "testText";
+        //    _xlDoc.InsertText(testText, "testSheet", "A", 1);
+        //    _xlDoc.Save();
 
-            //var dataTable = NCore.General.GetTableFromExcel("D:\\RefBook.xlsx");
-            var dataTable = NCore.General.GetTableFromExcel(_testFile);
-            string testValue = dataTable.Rows[1][1].ToString();
+        //    //var dataTable = NCore.General.GetTableFromExcel("D:\\RefBook.xlsx");
+        //    var dataTable = NCore.General.GetTableFromExcel(_testFile);
+        //    string testValue = dataTable.Rows[1][1].ToString();
 
-            Assert.AreEqual(testText, testValue);
-        }
+        //    Assert.AreEqual(testText, testValue);
+        //}
 
         [TestMethod]
         public void CanSetCellBorder()
