@@ -1,0 +1,2 @@
+E:\dev\dotNET\officeinteraction\excelinteractiontests\obj\Debug\ExcelInteractionTests.csprojResolveAssemblyReference.cache
+E:\dev\dotNET\officeinteraction\excelinteractiontests\obj\Debug\ExcelInteractionTests.csproj.ResolveComReference.cache
